@@ -1,0 +1,10 @@
+name: AstradalPorts
+version: '1'
+main: net.astradal.astradalPorts.AstradalPorts
+api-version: '1.21'
+prefix: AstradalPorts
+authors: [ Pookachu ]
+description: A plugin that makes fast travel more immersive.
+website: https://www.astradal.net
+
+depend: [Towny]
