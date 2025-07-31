@@ -23,7 +23,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
-    compileOnly 'com.github.TownyAdvanced:Towny:0.101.2.0'
+    compileOnly 'com.github.TownyAdvanced:Towny:0.101.2.1'
 }
 
 tasks {

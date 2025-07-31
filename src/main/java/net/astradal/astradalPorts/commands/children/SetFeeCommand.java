@@ -39,7 +39,7 @@ public final class SetFeeCommand {
 
         Block target = player.getTargetBlockExact(5);
         if (target == null || target.getType() != Material.LODESTONE) {
-            sender.sendMessage(Component.text("You must ne looking at a lodestone portstone.", NamedTextColor.RED));
+            sender.sendMessage(Component.text("You must be looking at a lodestone portstone.", NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }
 

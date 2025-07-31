@@ -5,6 +5,10 @@ api-version: '1.21'
 prefix: AstradalPorts
 authors: [ Pookachu ]
 description: A plugin that makes fast travel more immersive.
-website: https://www.astradal.net
+website: https://github.com/astradal-mc/AstradalPorts
 
-depend: [Towny]
+dependencies:
+  server:
+    Towny:
+      load: BEFORE
+      required: true

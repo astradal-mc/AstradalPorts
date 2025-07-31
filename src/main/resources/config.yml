@@ -1,0 +1,4 @@
+cooldowns:
+  air: 30  # seconds
+  land: 120
+  sea: 0
