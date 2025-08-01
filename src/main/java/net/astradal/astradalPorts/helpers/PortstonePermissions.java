@@ -1,4 +1,4 @@
-package net.astradal.astradalPorts.commands.helpers;
+package net.astradal.astradalPorts.helpers;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;

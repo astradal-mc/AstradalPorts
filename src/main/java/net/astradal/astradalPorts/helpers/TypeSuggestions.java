@@ -1,4 +1,4 @@
-package net.astradal.astradalPorts.commands.helpers;
+package net.astradal.astradalPorts.helpers;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;

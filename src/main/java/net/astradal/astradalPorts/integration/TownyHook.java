@@ -1,11 +1,14 @@
 package net.astradal.astradalPorts.integration;
 
 import com.palmergames.bukkit.towny.TownyAPI;
+import com.palmergames.bukkit.towny.TownyUniverse;
 import com.palmergames.bukkit.towny.object.Nation;
+import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
 import java.util.Optional;
 
@@ -34,6 +37,20 @@ public class TownyHook {
             }
         }
         return Optional.empty();
+    }
+
+    public static boolean isMayor(Player player, String townName) {
+        Resident resident = TownyAPI.getInstance().getResident(player.getUniqueId());
+        if (resident == null) return false;
+
+        Town town;
+        try {
+            town = TownyUniverse.getInstance().getTown(townName);
+        } catch (Exception e) {
+            return false;
+        }
+
+        return town != null && town.isMayor(resident);
     }
 
     public static boolean isClaimed(Location loc) {

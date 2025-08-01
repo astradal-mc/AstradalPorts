@@ -7,8 +7,8 @@ import com.mojang.brigadier.context.CommandContext;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.astradal.astradalPorts.AstradalPorts;
-import net.astradal.astradalPorts.commands.helpers.PortstonePermissions;
-import net.astradal.astradalPorts.commands.helpers.TypeSuggestions;
+import net.astradal.astradalPorts.helpers.PortstonePermissions;
+import net.astradal.astradalPorts.helpers.TypeSuggestions;
 import net.astradal.astradalPorts.integration.TownyHook;
 import net.astradal.astradalPorts.model.Portstone;
 import net.astradal.astradalPorts.services.PortstoneStorage;
@@ -16,7 +16,6 @@ import net.astradal.astradalPorts.util.PortstoneFormatter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.commons.lang3.StringUtils;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -102,7 +101,6 @@ public final class CreateCommand {
         }
 
         UUID id = UUID.randomUUID();
-        Location loc = target.getLocation();
 
         String customName = ctx.getNodes().stream().anyMatch(n -> n.getNode().getName().equals("name"))
             ? StringArgumentType.getString(ctx, "name")

@@ -1,4 +1,9 @@
 cooldowns:
-  air: 30  # seconds
-  land: 120
-  sea: 0
+  air: 3600  # seconds
+  land: 600
+  sea: 1800
+
+warmups:
+  air: 6    # seconds
+  land: 3
+  sea: 4

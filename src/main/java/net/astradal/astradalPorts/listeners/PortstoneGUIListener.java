@@ -1,8 +1,10 @@
 package net.astradal.astradalPorts.listeners;
 
+import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.model.Portstone;
 import net.astradal.astradalPorts.services.CooldownService;
 import net.astradal.astradalPorts.services.PortstoneStorage;
+import net.astradal.astradalPorts.services.TeleportWarmupTask;
 import net.astradal.astradalPorts.util.PortstoneKeys;
 
 import net.kyori.adventure.text.Component;
@@ -22,8 +24,10 @@ public class PortstoneGUIListener implements Listener {
 
     private final PortstoneStorage storage;
     private final CooldownService cooldowns;
+    private final AstradalPorts plugin;
 
-    public PortstoneGUIListener(PortstoneStorage storage, CooldownService cooldowns) {
+    public PortstoneGUIListener(AstradalPorts plugin, PortstoneStorage storage, CooldownService cooldowns) {
+        this.plugin = plugin;
         this.storage = storage;
         this.cooldowns = cooldowns;
     }
@@ -39,6 +43,10 @@ public class PortstoneGUIListener implements Listener {
         if (clicked == null || !clicked.hasItemMeta()) return;
 
         PersistentDataContainer container = clicked.getItemMeta().getPersistentDataContainer();
+        if (PortstoneKeys.PORTSTONE_ID == null) {
+            plugin.getLogger().warning("PortstoneKeys.PORTSTONE_ID is null!");
+        }
+
         String idString = container.get(PortstoneKeys.PORTSTONE_ID, PersistentDataType.STRING);
         if (idString == null) return;
 
@@ -64,10 +72,16 @@ public class PortstoneGUIListener implements Listener {
         }
 
         // ✅ Teleport and start cooldown
-        player.teleport(target.getLocation());
+        int warmupSeconds = plugin.getConfig().getInt("warmups." + target.getType().toLowerCase(), 0);
         cooldowns.markUsed(player, target.getType());
 
-        player.sendMessage(Component.text("Warped to " + target.getDisplayName(), NamedTextColor.GREEN));
+        if (warmupSeconds <= 0) {
+            player.teleport(target.getLocation());
+            player.sendMessage(Component.text("Warped to " + target.getDisplayName(), NamedTextColor.GREEN));
+        } else {
+            new TeleportWarmupTask(plugin, player, target, warmupSeconds).start();
+        }
+
         player.closeInventory();
     }
 }

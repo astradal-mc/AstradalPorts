@@ -12,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -31,19 +30,20 @@ public final class PortstoneGUI {
             .sorted(Comparator.comparing(Portstone::getDisplayName))
             .toList();
 
-        Inventory menu = Bukkit.createInventory(null, INVENTORY_SIZE, Component.text(GUI_TITLE, NamedTextColor.GOLD));
+        Inventory menu = Bukkit.createInventory(null, INVENTORY_SIZE, Component.text(GUI_TITLE, NamedTextColor.BLACK));
 
         for (Portstone port : destinations) {
             ItemStack item = new ItemStack(Material.LODESTONE);
             ItemMeta meta = item.getItemMeta();
+            if (meta == null) continue;
 
             // Set name
             meta.displayName(Component.text(port.getDisplayName(), NamedTextColor.YELLOW));
 
             // Build lore
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("Town: " + port.getTown(), NamedTextColor.GRAY));
-            lore.add(Component.text("Nation: " + port.getNation(), NamedTextColor.DARK_GRAY));
+            lore.add(Component.text("Town: " + (port.getTown() != null ? port.getTown() : "None"), NamedTextColor.GRAY));
+            lore.add(Component.text("Nation: " + (port.getNation() != null ? port.getNation() : "None"), NamedTextColor.DARK_GRAY));
             lore.add(Component.text("Fee: $" + port.getTravelFee(), NamedTextColor.GOLD));
 
             boolean onCooldown = cooldownService.isOnCooldown(player, type);

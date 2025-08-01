@@ -7,8 +7,8 @@ import com.mojang.brigadier.context.CommandContext;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.astradal.astradalPorts.AstradalPorts;
-import net.astradal.astradalPorts.commands.helpers.IdSuggestions;
-import net.astradal.astradalPorts.commands.helpers.PortstonePermissions;
+import net.astradal.astradalPorts.helpers.IdSuggestions;
+import net.astradal.astradalPorts.helpers.PortstonePermissions;
 import net.astradal.astradalPorts.model.Portstone;
 import net.astradal.astradalPorts.services.PortstoneStorage;
 import net.kyori.adventure.text.Component;
@@ -90,7 +90,7 @@ public class InfoCommand {
         sender.sendMessage(Component.text("✦ Town: ", NamedTextColor.GRAY).append(Component.text(p.getTown(), NamedTextColor.GREEN)));
         sender.sendMessage(Component.text("✦ Nation: ", NamedTextColor.GRAY).append(Component.text(p.getNation(), NamedTextColor.BLUE)));
         sender.sendMessage(Component.text("✦ Location: ", NamedTextColor.GRAY).append(Component.text(
-            String.format("%s %.0f %.0f %.0f",
+            String.format("%s; %.0f, %.0f, %.0f",
                 p.getLocation().getWorld().getName(),
                 p.getLocation().getX(),
                 p.getLocation().getY(),

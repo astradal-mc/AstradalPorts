@@ -6,7 +6,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.commands.children.*;
-import net.astradal.astradalPorts.commands.helpers.PortstonePermissions;
+import net.astradal.astradalPorts.helpers.PortstonePermissions;
 import net.astradal.astradalPorts.services.PortstoneStorage;
 
 public final class RootCommand {
