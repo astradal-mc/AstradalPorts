@@ -1,5 +1,6 @@
 package net.astradal.astradalPorts.listeners;
 
+import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.inventory.PortstoneGUI;
 import net.astradal.astradalPorts.model.Portstone;
 import net.astradal.astradalPorts.services.CooldownService;
@@ -13,13 +14,17 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 public class PortstoneClickListener implements Listener {
     private final PortstoneStorage storage;
     private final CooldownService cooldownService;
+    private final AstradalPorts plugin;
 
-    public PortstoneClickListener(PortstoneStorage storage, CooldownService cooldownService) {
+    public PortstoneClickListener(AstradalPorts plugin, PortstoneStorage storage, CooldownService cooldownService) {
+        this.plugin = plugin;
         this.storage = storage;
         this.cooldownService = cooldownService;
     }
@@ -35,10 +40,18 @@ public class PortstoneClickListener implements Listener {
         Optional<Portstone> maybe = storage.getByLocation(loc);
         if (maybe.isEmpty()) return;
 
-        Portstone clicked = maybe.get();
         event.setCancelled(true);
-
         Player player = event.getPlayer();
-        PortstoneGUI.open(player, clicked, storage, cooldownService);
+
+        Portstone clicked = maybe.get();
+        String type = clicked.getType().toLowerCase();
+
+        List<Portstone> destinations = storage.getByType(type).stream()
+            .filter(p -> !p.getId().equals(clicked.getId()))
+            .sorted(Comparator.comparing(Portstone::getDisplayName))
+            .toList();
+
+        PortstoneGUI gui = new PortstoneGUI(plugin, player, clicked, destinations, cooldownService);
+        gui.open(player);
     }
 }

@@ -1,53 +1,58 @@
 package net.astradal.astradalPorts.inventory;
 
+import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.model.Portstone;
 import net.astradal.astradalPorts.services.CooldownService;
-import net.astradal.astradalPorts.services.PortstoneStorage;
 import net.astradal.astradalPorts.util.PortstoneKeys;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
-public final class PortstoneGUI {
+public class PortstoneGUI implements InventoryHolder {
 
-    private static final int INVENTORY_SIZE = 54;
-    private static final String GUI_TITLE = "Travel to...";
+    private final AstradalPorts plugin;
+    private final Player player;
+    private final Portstone source;
+    private final List<Portstone> destinations;
+    private final CooldownService cooldownService;
+    private final Inventory inventory;
 
-    public static void open(Player player, Portstone source, PortstoneStorage storage, CooldownService cooldownService) {
-        String type = source.getType().toLowerCase();
-        List<Portstone> destinations = storage.getByType(type).stream()
-            .filter(p -> !p.getId().equals(source.getId()))
-            .sorted(Comparator.comparing(Portstone::getDisplayName))
-            .toList();
+    public PortstoneGUI(AstradalPorts plugin, Player player, Portstone source, List<Portstone> destinations, CooldownService cooldownService) {
+        this.plugin = plugin;
+        this.player = player;
+        this.source = source;
+        this.destinations = destinations;
+        this.cooldownService = cooldownService;
 
-        Inventory menu = Bukkit.createInventory(null, INVENTORY_SIZE, Component.text(GUI_TITLE, NamedTextColor.BLACK));
+        this.inventory = plugin.getServer().createInventory(this, 54, Component.text("Travel to...", NamedTextColor.BLACK));
+        buildMenu();
+    }
 
+    private void buildMenu() {
         for (Portstone port : destinations) {
+            if (port.getId().equals(source.getId())) continue;
+
             ItemStack item = new ItemStack(Material.LODESTONE);
             ItemMeta meta = item.getItemMeta();
-            if (meta == null) continue;
 
-            // Set name
             meta.displayName(Component.text(port.getDisplayName(), NamedTextColor.YELLOW));
 
-            // Build lore
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("Town: " + (port.getTown() != null ? port.getTown() : "None"), NamedTextColor.GRAY));
-            lore.add(Component.text("Nation: " + (port.getNation() != null ? port.getNation() : "None"), NamedTextColor.DARK_GRAY));
+            lore.add(Component.text("Town: " + port.getTown(), NamedTextColor.GRAY));
+            lore.add(Component.text("Nation: " + port.getNation(), NamedTextColor.DARK_GRAY));
             lore.add(Component.text("Fee: $" + port.getTravelFee(), NamedTextColor.GOLD));
 
-            boolean onCooldown = cooldownService.isOnCooldown(player, type);
-            long remaining = cooldownService.getRemaining(player, type);
+            boolean onCooldown = cooldownService.isOnCooldown(player, port.getType());
+            long remaining = cooldownService.getRemaining(player, port.getType());
 
             if (onCooldown) {
                 lore.add(Component.text("Cooldown: " + remaining + "s remaining", NamedTextColor.RED));
@@ -57,7 +62,6 @@ public final class PortstoneGUI {
 
             meta.lore(lore);
 
-            // Store UUID for secure targeting
             meta.getPersistentDataContainer().set(
                 PortstoneKeys.PORTSTONE_ID,
                 PersistentDataType.STRING,
@@ -65,13 +69,24 @@ public final class PortstoneGUI {
             );
 
             item.setItemMeta(meta);
-            menu.addItem(item);
+            inventory.addItem(item);
         }
-
-        player.openInventory(menu);
     }
 
-    private PortstoneGUI() {
-        // static-only utility
+    public void open(Player player) {
+        player.openInventory(this.inventory);
     }
+
+    @Override
+    public Inventory getInventory() {
+        return this.inventory;
+    }
+
+    public List<Portstone> getDestinations() {
+        return destinations;
+    }
+
+    public Portstone getSource() { return source; }
 }
+
+

@@ -51,9 +51,9 @@ public final class AstradalPorts extends JavaPlugin {
         // Portstone is broken
         pm.registerEvents(new PortstoneBreakListener(portstoneStorage, hologramService), this);
         // Portstone is clicked
-        pm.registerEvents(new PortstoneClickListener(portstoneStorage, cooldownService), this);
+        pm.registerEvents(new PortstoneClickListener(this, portstoneStorage, cooldownService), this);
         // Gui elements are clicked
-        pm.registerEvents(new PortstoneGUIListener(this, portstoneStorage, cooldownService), this);
+        pm.registerEvents(new PortstoneGUIListener(this, cooldownService), this);
 
         // Town is deleted
         pm.registerEvents(new TownDeleteListener(cleanup), this);
