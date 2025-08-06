@@ -2,6 +2,7 @@ package net.astradal.astradalPorts.model;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 
 import java.util.UUID;
@@ -15,9 +16,11 @@ public class Portstone {
     private final String nation;
     private double fee;
     private String displayName;
+    private Material icon;
 
-    public Portstone(UUID id, String type, Location location, String town, String nation, double fee, String displayName) {
+    public Portstone(UUID id, String type, Location location, String town, String nation, double fee, String displayName, Material icon) {
         this.id = id;
+        this.icon = icon;
         this.type = type;
         this.world = location.getWorld().getName();
         this.x = location.x();
@@ -37,7 +40,13 @@ public class Portstone {
     public void setTravelFee(double fee) { this.fee = fee; }
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
+    public Material getIcon() {
+        return icon != null ? icon : Material.LODESTONE;
+    }
 
+    public void setIcon(Material icon) {
+        this.icon = icon;
+    }
     public Location getLocation() {
         World w = Bukkit.getWorld(world);
         return new Location(w, x, y, z);

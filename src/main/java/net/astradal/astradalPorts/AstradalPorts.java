@@ -69,7 +69,7 @@ public final class AstradalPorts extends JavaPlugin {
             var dispatcher = registrar.getDispatcher();
 
             registrar.register(
-                RootCommand.create(this, portstoneStorage, dispatcher)
+                RootCommand.create(this, portstoneStorage, cooldownService, hologramService, dispatcher)
             );
         });
     }

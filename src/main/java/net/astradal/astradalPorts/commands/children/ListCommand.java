@@ -16,7 +16,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 
-public class ListCommand  {
+public final class ListCommand  {
     public static LiteralArgumentBuilder<CommandSourceStack> build(AstradalPorts plugin, PortstoneStorage storage) {
         return Commands.literal("list")
             .requires(PortstonePermissions.requires("list"))
@@ -55,7 +55,7 @@ public class ListCommand  {
                 .append(Component.text(" [" + p.getType().toUpperCase() + "]", NamedTextColor.DARK_GRAY))
                 .hoverEvent(Component.text("Click to teleport"))
                 .clickEvent(ClickEvent.runCommand(
-                    String.format("/tp @s %s %.1f %.1f %.1f",
+                    String.format("/tppos %s %.1f %.1f %.1f",
                         p.getLocation().getWorld().getName(),
                         p.getLocation().getX(),
                         p.getLocation().getY(),

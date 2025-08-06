@@ -83,4 +83,15 @@ public class CooldownService {
         }
     }
 
+    public void reload() {
+        cooldowns.clear();
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("cooldowns");
+        if (section != null) {
+            for (String type : section.getKeys(false)) {
+                cooldowns.put(type.toLowerCase(), section.getInt(type));
+            }
+        }
+    }
+
+
 }

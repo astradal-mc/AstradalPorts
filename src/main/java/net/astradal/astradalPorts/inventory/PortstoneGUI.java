@@ -13,6 +13,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,7 @@ public class PortstoneGUI implements InventoryHolder {
         for (Portstone port : destinations) {
             if (port.getId().equals(source.getId())) continue;
 
-            ItemStack item = new ItemStack(Material.LODESTONE);
+            ItemStack item = new ItemStack(port.getIcon());
             ItemMeta meta = item.getItemMeta();
 
             meta.displayName(Component.text(port.getDisplayName(), NamedTextColor.YELLOW));
@@ -78,7 +79,7 @@ public class PortstoneGUI implements InventoryHolder {
     }
 
     @Override
-    public Inventory getInventory() {
+    public @NotNull Inventory getInventory() {
         return this.inventory;
     }
 

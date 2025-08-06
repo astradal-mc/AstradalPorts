@@ -21,7 +21,7 @@ import org.bukkit.entity.Player;
 import java.util.Optional;
 import java.util.UUID;
 
-public class InfoCommand {
+public final class InfoCommand {
 
     public static LiteralArgumentBuilder<CommandSourceStack> build(AstradalPorts plugin, PortstoneStorage storage) {
         return Commands.literal("info")

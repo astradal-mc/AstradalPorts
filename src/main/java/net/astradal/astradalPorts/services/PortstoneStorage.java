@@ -3,6 +3,7 @@ package net.astradal.astradalPorts.services;
 import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.model.Portstone;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -77,7 +78,7 @@ public class PortstoneStorage {
             .toList();
     }
 
-    private void save(Portstone portstone) {
+    public void save(Portstone portstone) {
         String id = portstone.getId().toString();
         Location loc = portstone.getLocation();
 
@@ -90,6 +91,7 @@ public class PortstoneStorage {
         config.set(id + ".nation", portstone.getNation());
         config.set(id + ".fee", portstone.getTravelFee());
         config.set(id + ".display-name", portstone.getDisplayName());
+        config.set(id + ".icon", portstone.getIcon().name());
 
         saveFile();
     }
@@ -124,6 +126,8 @@ public class PortstoneStorage {
                 String nation = config.getString(key + ".nation");
                 double fee = config.getDouble(key + ".fee");
                 String displayName = config.getString(key + ".display-name");
+                String iconName = config.getString(key + ".icon");
+                Material icon = iconName != null ? Material.matchMaterial(iconName) : Material.LODESTONE;
 
                 String worldName = config.getString(key + ".world");
                 if (worldName == null) {
@@ -137,12 +141,18 @@ public class PortstoneStorage {
                     continue;
                 }
                 Location loc = new Location(bukkitWorld, x, y, z);
-                Portstone portstone = new Portstone(id, type, loc, town, nation, fee, displayName);
+                Portstone portstone = new Portstone(id, type, loc, town, nation, fee, displayName, icon);
                 portstones.put(id, portstone);
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to load portstone: " + key + " (" + e.getMessage() + ")");
             }
         }
+    }
+
+    public void reload() {
+        this.portstones.clear();
+        YamlConfiguration.loadConfiguration(file);
+        this.loadAll();
     }
 
 }

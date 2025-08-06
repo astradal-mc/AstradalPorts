@@ -109,6 +109,7 @@ public final class CreateCommand {
         String displayName = determineDisplayName(customName, type, townName, nationName);
 
         double defaultFee = 0.0;
+        Material defaultIcon = Material.LODESTONE;
 
         Portstone portstone = new Portstone(
             id,
@@ -117,7 +118,8 @@ public final class CreateCommand {
             townName,
             nationName,
             defaultFee,
-            displayName
+            displayName,
+            defaultIcon
         );
 
         portstoneStorage.addPortstone(portstone);

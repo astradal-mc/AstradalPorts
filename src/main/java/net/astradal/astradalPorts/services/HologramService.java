@@ -11,7 +11,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.TextDisplay;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -141,6 +140,11 @@ public class HologramService {
         } catch (IOException e) {
            plugin.getLogger().severe("Failed to save holograms.yml: " + e.getMessage());
         }
+    }
+
+    public void reload() {
+        this.portstoneToHologram.clear();
+        this.load();
     }
 }
 
