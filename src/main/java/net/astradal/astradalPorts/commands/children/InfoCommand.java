@@ -115,5 +115,4 @@ public final class InfoCommand {
         sender.sendMessage(Component.text("✦ Travel Fee: ", NamedTextColor.GRAY).append(Component.text("$" + fee, NamedTextColor.GOLD)));
     }
 
-
 }

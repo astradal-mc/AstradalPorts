@@ -97,25 +97,28 @@ public class TeleportWarmupTask implements Listener {
         // Preserve direction they were facing
         destination.setDirection(startLocation.getDirection());
 
-        player.teleportAsync(destination.add(0,.5,0)).thenRun(() ->
-            player.sendMessage(Component.text("Warped to " + target.getDisplayName(), NamedTextColor.GREEN))
-        );
-
-        Economy econ = plugin.getEconomy(); // Assuming you’ve stored the Vault economy instance
+        Economy econ = plugin.getEconomy();
         double fee = target.getTravelFee();
 
+        // Apply Travel Fee
         if (fee > 0) {
             EconomyResponse response = econ.withdrawPlayer(player, fee);
             if (!response.transactionSuccess()) {
-                player.sendMessage(Component.text("You need $" + fee + " to travel.", NamedTextColor.RED));
-                return; // cancel teleport
+                cancel("You need $" + fee + " to travel here.");
+                return;
             }
+            player.sendMessage(Component.text("Paid travel fee of " + "$" + fee, NamedTextColor.GRAY));
         }
 
         Town town = TownyUniverse.getInstance().getTown(target.getTown());
         if (town != null) {
             town.getAccount().deposit(fee, "Portstone travel fee");
         }
+
+        // Teleport Player
+        player.teleportAsync(destination.add(0,.5,0)).thenRun(() ->
+            player.sendMessage(Component.text("Warped to " + target.getDisplayName(), NamedTextColor.GREEN))
+        );
 
         stop();
     }

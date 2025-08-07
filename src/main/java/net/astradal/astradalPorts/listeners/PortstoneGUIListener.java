@@ -9,6 +9,7 @@ import net.astradal.astradalPorts.util.PortstoneKeys;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -68,6 +69,15 @@ public class PortstoneGUIListener implements Listener {
         if (cooldownService.isOnCooldown(player, type)) {
             long remaining = cooldownService.getRemaining(player, type);
             player.sendMessage(Component.text("You must wait " + remaining + "s before using another " + type + " portstone.", NamedTextColor.RED));
+            return;
+        }
+
+        Economy econ = plugin.getEconomy();
+        double fee = target.getTravelFee();
+
+        // See if they have enough money
+        if (econ.getBalance(player) < fee) {
+            player.sendMessage(Component.text("You need $" + fee + " to travel here.", NamedTextColor.RED));
             return;
         }
 

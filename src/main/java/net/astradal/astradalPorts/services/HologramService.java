@@ -62,6 +62,7 @@ public class HologramService {
             return;
         }
 
+
         TextDisplay display = world.spawn(loc, TextDisplay.class, entity -> {
             entity.text(text);
             entity.setBillboard(Display.Billboard.VERTICAL);

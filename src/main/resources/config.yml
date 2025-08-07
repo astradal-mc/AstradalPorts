@@ -7,3 +7,6 @@ warmups:
   air: 6    # seconds
   land: 3
   sea: 4
+
+limits:
+  land-portstone-range: 500  # distance in blocks

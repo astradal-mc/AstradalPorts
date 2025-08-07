@@ -14,8 +14,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class PortstoneGUI implements InventoryHolder {
 
@@ -26,12 +25,26 @@ public class PortstoneGUI implements InventoryHolder {
     private final CooldownService cooldownService;
     private final Inventory inventory;
 
-    public PortstoneGUI(AstradalPorts plugin, Player player, Portstone source, List<Portstone> destinations, CooldownService cooldownService) {
+    public PortstoneGUI(AstradalPorts plugin, Player player, Portstone source, List<Portstone> allDestinations, CooldownService cooldownService) {
         this.plugin = plugin;
         this.player = player;
         this.source = source;
-        this.destinations = destinations;
         this.cooldownService = cooldownService;
+
+        // Filter destinations based on port type and land range
+        if (source.getType().equalsIgnoreCase("land")) {
+            int maxDistance = plugin.getLandPortstoneRangeLimit();
+            this.destinations = allDestinations.stream()
+                .filter(p -> !p.getId().equals(source.getId()))
+                .filter(p -> p.getType().equalsIgnoreCase("land"))
+                .filter(p -> p.getLocation().getWorld().equals(source.getLocation().getWorld()))
+                .filter(p -> p.getLocation().distance(source.getLocation()) <= maxDistance)
+                .toList();
+        } else {
+            this.destinations = allDestinations.stream()
+                .filter(p -> !p.getId().equals(source.getId()))
+                .toList();
+        }
 
         this.inventory = plugin.getServer().createInventory(this, 54, Component.text("Travel to...", NamedTextColor.BLACK));
         buildMenu();
@@ -39,10 +52,9 @@ public class PortstoneGUI implements InventoryHolder {
 
     private void buildMenu() {
         for (Portstone port : destinations) {
-            if (port.getId().equals(source.getId())) continue;
-
             ItemStack item = new ItemStack(port.getIcon());
             ItemMeta meta = item.getItemMeta();
+            if (meta == null) continue;
 
             meta.displayName(Component.text(port.getDisplayName(), NamedTextColor.YELLOW));
 
@@ -51,10 +63,9 @@ public class PortstoneGUI implements InventoryHolder {
             lore.add(Component.text("Nation: " + port.getNation(), NamedTextColor.DARK_GRAY));
             lore.add(Component.text("Fee: $" + port.getTravelFee(), NamedTextColor.GOLD));
 
-            boolean onCooldown = cooldownService.isOnCooldown(player, port.getType());
-            long remaining = cooldownService.getRemaining(player, port.getType());
-
-            if (onCooldown) {
+            String type = port.getType().toLowerCase();
+            if (cooldownService.isOnCooldown(player, type)) {
+                long remaining = cooldownService.getRemaining(player, type);
                 lore.add(Component.text("Cooldown: " + remaining + "s remaining", NamedTextColor.RED));
             } else {
                 lore.add(Component.text("Click to travel", NamedTextColor.GREEN));
@@ -73,20 +84,24 @@ public class PortstoneGUI implements InventoryHolder {
         }
     }
 
-    public void open(Player player) {
-        player.openInventory(this.inventory);
-    }
-
     @Override
     public @NotNull Inventory getInventory() {
-        return this.inventory;
+        return inventory;
+    }
+
+    public void open(Player player) {
+        player.openInventory(this.inventory);
     }
 
     public List<Portstone> getDestinations() {
         return destinations;
     }
 
-    public Portstone getSource() { return source; }
+    public Portstone getSource() {
+        return source;
+    }
 }
+
+
 
 

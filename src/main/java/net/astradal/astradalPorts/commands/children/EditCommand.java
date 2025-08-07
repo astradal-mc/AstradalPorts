@@ -9,6 +9,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.astradal.astradalPorts.AstradalPorts;
+import net.astradal.astradalPorts.events.PortstoneRenameEvent;
 import net.astradal.astradalPorts.helpers.PortstonePermissions;
 import net.astradal.astradalPorts.integration.TownyHook;
 import net.astradal.astradalPorts.model.Portstone;
@@ -96,7 +97,19 @@ public final class EditCommand {
 
         switch (property) {
             case "name" -> {
+                // Prevent multiple Portstones from having the same name
+                if (storage.isDisplayNameTaken(value, null)) {
+                    player.sendMessage(Component.text("That portstone name is already in use.", NamedTextColor.RED));
+                    return 1;
+                }
+
+                // Get the old name
+                String oldName = portstone.getDisplayName();
+                // Set the new name
                 portstone.setDisplayName(value);
+
+                // Invoke rename event to keep the hologram in sync
+                plugin.getServer().getPluginManager().callEvent(new PortstoneRenameEvent(portstone, oldName, value));
                 sender.sendMessage(Component.text("Portstone name updated to '" + value + "'.", NamedTextColor.GREEN));
             }
 

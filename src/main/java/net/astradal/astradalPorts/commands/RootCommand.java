@@ -20,15 +20,16 @@ public final class RootCommand {
         CommandDispatcher<CommandSourceStack> dispatcher
     ) {
         return Commands.literal("portstone")
-            .executes(ctx -> HelpCommand.execute(ctx, dispatcher))
             .then(HelpCommand.build(dispatcher))
             .then(CreateCommand.build(plugin, portstoneStorage))
-            .then(EditCommand.build(plugin,portstoneStorage))
+            .then(EditCommand.build(plugin, portstoneStorage))
             .then(RemoveCommand.build(plugin, portstoneStorage))
             .then(ListCommand.build(plugin, portstoneStorage))
             .then(InfoCommand.build(plugin, portstoneStorage))
+            .then(TeleportCommand.build(plugin, portstoneStorage))
             .then(ReloadCommand.build(plugin, portstoneStorage, cooldownService, hologramService))
             .then(VersionCommand.build(plugin))
+            .executes(ctx -> HelpCommand.execute(ctx, dispatcher)) // ← Now only runs when no args
             .build();
     }
 }

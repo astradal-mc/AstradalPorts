@@ -149,6 +149,12 @@ public class PortstoneStorage {
         }
     }
 
+    public boolean isDisplayNameTaken(String name, UUID excludeId) {
+        return getAll().stream()
+            .filter(p -> !p.getId().equals(excludeId))
+            .anyMatch(p -> p.getDisplayName().equalsIgnoreCase(name));
+    }
+
     public void reload() {
         this.portstones.clear();
         YamlConfiguration.loadConfiguration(file);

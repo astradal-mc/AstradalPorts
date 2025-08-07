@@ -1,6 +1,7 @@
 package net.astradal.astradalPorts.services;
 
 import net.astradal.astradalPorts.AstradalPorts;
+import net.astradal.astradalPorts.events.CooldownExpireEvent;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -16,7 +17,10 @@ public class CooldownService {
     private final AstradalPorts plugin;
 
     private final Map<String, Integer> cooldowns; // seconds
-    private final Map<UUID, Map<String, Long>> lastUse = new HashMap<>(); // player → type → timestamp
+    private final Map<UUID, Map<String, Long>> lastUse = new HashMap<>();
+
+    // Track scheduled cooldown expirations to prevent duplicates
+    private final Map<UUID, Map<String, Integer>> scheduledTasks = new HashMap<>();
 
     public CooldownService(AstradalPorts plugin, Map<String, Integer> cooldowns) {
         this.plugin = plugin;
@@ -24,24 +28,49 @@ public class CooldownService {
         this.file = new File(plugin.getDataFolder(), "cooldowns.yml");
         load();
     }
+
     public boolean isOnCooldown(Player player, String type) {
         long now = System.currentTimeMillis();
-        long last = lastUse.getOrDefault(player.getUniqueId(), Map.of()).getOrDefault(type, 0L);
+        long last = lastUse.getOrDefault(player.getUniqueId(), Map.of()).getOrDefault(type.toLowerCase(), 0L);
         int duration = cooldowns.getOrDefault(type.toLowerCase(), 0);
         return now < last + (duration * 1000L);
     }
 
     public long getRemaining(Player player, String type) {
         long now = System.currentTimeMillis();
-        long last = lastUse.getOrDefault(player.getUniqueId(), Map.of()).getOrDefault(type, 0L);
+        long last = lastUse.getOrDefault(player.getUniqueId(), Map.of()).getOrDefault(type.toLowerCase(), 0L);
         int duration = cooldowns.getOrDefault(type.toLowerCase(), 0);
         long end = last + (duration * 1000L);
         return Math.max(0, (end - now) / 1000);
     }
 
     public void markUsed(Player player, String type) {
-        lastUse.computeIfAbsent(player.getUniqueId(), __ -> new HashMap<>())
-            .put(type.toLowerCase(), System.currentTimeMillis());
+        UUID uuid = player.getUniqueId();
+        String normalized = type.toLowerCase();
+
+        lastUse.computeIfAbsent(uuid, __ -> new HashMap<>())
+            .put(normalized, System.currentTimeMillis());
+
+        // Cancel any previously scheduled task
+        Map<String, Integer> taskMap = scheduledTasks.computeIfAbsent(uuid, __ -> new HashMap<>());
+        if (taskMap.containsKey(normalized)) {
+            plugin.getServer().getScheduler().cancelTask(taskMap.get(normalized));
+        }
+
+        int seconds = cooldowns.getOrDefault(normalized, 0);
+        if (seconds <= 0) return;
+
+        // Schedule the CooldownExpireEvent
+        int taskId = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            plugin.getServer().getPluginManager().callEvent(new CooldownExpireEvent(player, normalized));
+            Map<String, Integer> playerTasks = scheduledTasks.get(uuid);
+            if (playerTasks != null) {
+                playerTasks.remove(normalized);
+                if (playerTasks.isEmpty()) scheduledTasks.remove(uuid);
+            }
+        }, seconds * 20L).getTaskId();
+
+        taskMap.put(normalized, taskId);
     }
 
     public void save() {
@@ -76,7 +105,7 @@ public class CooldownService {
 
             Map<String, Long> cooldownMap = new HashMap<>();
             for (String type : section.getKeys(false)) {
-                cooldownMap.put(type, section.getLong(type));
+                cooldownMap.put(type.toLowerCase(), section.getLong(type));
             }
 
             lastUse.put(playerId, cooldownMap);
@@ -92,6 +121,5 @@ public class CooldownService {
             }
         }
     }
-
-
 }
+

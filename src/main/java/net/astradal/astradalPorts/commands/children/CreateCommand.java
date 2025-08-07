@@ -72,7 +72,6 @@ public final class CreateCommand {
             return Command.SINGLE_SUCCESS;
         }
 
-
         Optional<String> town = TownyHook.getTown(target.getLocation());
         String townName = town.orElse(null);
 
@@ -105,6 +104,12 @@ public final class CreateCommand {
         String customName = ctx.getNodes().stream().anyMatch(n -> n.getNode().getName().equals("name"))
             ? StringArgumentType.getString(ctx, "name")
             : null;
+
+        // Prevent naming a portstone the same name as another portstone
+        if (portstoneStorage.isDisplayNameTaken(customName, null)) {
+            player.sendMessage(Component.text("That portstone name is already in use.", NamedTextColor.RED));
+            return 0;
+        }
 
         String displayName = determineDisplayName(customName, type, townName, nationName);
 

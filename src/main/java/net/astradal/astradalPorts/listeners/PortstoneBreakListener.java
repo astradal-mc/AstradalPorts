@@ -1,6 +1,5 @@
 package net.astradal.astradalPorts.listeners;
 
-import com.palmergames.bukkit.towny.object.Resident;
 import net.astradal.astradalPorts.helpers.PortstonePermissions;
 import net.astradal.astradalPorts.integration.TownyHook;
 import net.astradal.astradalPorts.model.Portstone;

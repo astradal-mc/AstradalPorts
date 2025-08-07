@@ -2,6 +2,7 @@ package net.astradal.astradalPorts;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.astradal.astradalPorts.commands.RootCommand;
+import net.astradal.astradalPorts.events.PortstoneRenameEvent;
 import net.astradal.astradalPorts.helpers.IdSuggestions;
 import net.astradal.astradalPorts.helpers.PortstoneCleanupHelper;
 import net.astradal.astradalPorts.listeners.*;
@@ -63,6 +64,10 @@ public final class AstradalPorts extends JavaPlugin {
         pm.registerEvents(new PortstoneClickListener(this, portstoneStorage, cooldownService), this);
         // Gui elements are clicked
         pm.registerEvents(new PortstoneGUIListener(this, cooldownService), this);
+        // Cooldown event fires
+        pm.registerEvents(new CooldownExpireListener(cooldownService), this);
+        // Portstone rename event
+        pm.registerEvents(new PortstoneRenameListener(hologramService), this);
 
         // Town is deleted
         pm.registerEvents(new TownDeleteListener(cleanup), this);
@@ -112,4 +117,9 @@ public final class AstradalPorts extends JavaPlugin {
     public Economy getEconomy() {
         return economy;
     }
+
+    public int getLandPortstoneRangeLimit() {
+        return getConfig().getInt("limits.land-portstone-range", 500);
+    }
+
 }
