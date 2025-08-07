@@ -12,8 +12,10 @@ import net.astradal.astradalPorts.services.CooldownService;
 import net.astradal.astradalPorts.services.HologramService;
 import net.astradal.astradalPorts.services.PortstoneStorage;
 import net.astradal.astradalPorts.util.PortstoneKeys;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
@@ -24,6 +26,7 @@ public final class AstradalPorts extends JavaPlugin {
     private PortstoneStorage portstoneStorage;
     private HologramService hologramService;
     private CooldownService cooldownService;
+    private Economy economy;
 
     @Override
     public void onEnable() {
@@ -44,6 +47,12 @@ public final class AstradalPorts extends JavaPlugin {
             }
         }
         this.cooldownService = new CooldownService(this, cooldownMap);
+
+        if (!setupEconomy()) {
+            getLogger().severe("Vault not found or no economy plugin installed!");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
         // Register plugin listeners
         PluginManager pm = getServer().getPluginManager();
@@ -80,6 +89,14 @@ public final class AstradalPorts extends JavaPlugin {
         cooldownService.save();
     }
 
+    private boolean setupEconomy() {
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) return false;
+
+        this.economy = rsp.getProvider();
+        return true;
+    }
+
     public HologramService getHologramService() {
         return this.hologramService;
     }
@@ -90,5 +107,9 @@ public final class AstradalPorts extends JavaPlugin {
 
     public CooldownService getCooldownService() {
         return this.cooldownService;
+    }
+
+    public Economy getEconomy() {
+        return economy;
     }
 }

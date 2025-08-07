@@ -1,11 +1,15 @@
 package net.astradal.astradalPorts.services;
 
 
+import com.palmergames.bukkit.towny.TownyUniverse;
+import com.palmergames.bukkit.towny.object.Town;
 import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.model.Portstone;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -96,6 +100,22 @@ public class TeleportWarmupTask implements Listener {
         player.teleportAsync(destination.add(0,.5,0)).thenRun(() ->
             player.sendMessage(Component.text("Warped to " + target.getDisplayName(), NamedTextColor.GREEN))
         );
+
+        Economy econ = plugin.getEconomy(); // Assuming you’ve stored the Vault economy instance
+        double fee = target.getTravelFee();
+
+        if (fee > 0) {
+            EconomyResponse response = econ.withdrawPlayer(player, fee);
+            if (!response.transactionSuccess()) {
+                player.sendMessage(Component.text("You need $" + fee + " to travel.", NamedTextColor.RED));
+                return; // cancel teleport
+            }
+        }
+
+        Town town = TownyUniverse.getInstance().getTown(target.getTown());
+        if (town != null) {
+            town.getAccount().deposit(fee, "Portstone travel fee");
+        }
 
         stop();
     }

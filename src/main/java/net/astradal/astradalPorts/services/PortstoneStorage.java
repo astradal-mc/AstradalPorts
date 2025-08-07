@@ -37,6 +37,7 @@ public class PortstoneStorage {
             saveFile();
         }
     }
+
     public void removePortstone(Location loc) {
         Optional<UUID> match = portstones.values().stream()
             .filter(p -> p.getLocation().equals(loc))
@@ -118,7 +119,6 @@ public class PortstoneStorage {
             try {
                 UUID id = UUID.fromString(key);
                 String type = config.getString(key + ".type");
-                String world = config.getString(key + ".world");
                 double x = config.getDouble(key + ".x");
                 double y = config.getDouble(key + ".y");
                 double z = config.getDouble(key + ".z");

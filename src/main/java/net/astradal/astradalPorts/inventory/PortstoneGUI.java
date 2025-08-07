@@ -6,7 +6,6 @@ import net.astradal.astradalPorts.services.CooldownService;
 import net.astradal.astradalPorts.util.PortstoneKeys;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;

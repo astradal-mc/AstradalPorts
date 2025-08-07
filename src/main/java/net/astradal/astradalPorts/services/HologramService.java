@@ -65,8 +65,8 @@ public class HologramService {
         TextDisplay display = world.spawn(loc, TextDisplay.class, entity -> {
             entity.text(text);
             entity.setBillboard(Display.Billboard.VERTICAL);
-            entity.setSeeThrough(true);
-            entity.setDefaultBackground(false);
+            entity.setSeeThrough(false);
+            entity.setDefaultBackground(true);
             entity.setShadowed(true);
             entity.setBackgroundColor(Color.fromARGB(0, 0, 0, 0)); // fully transparent
             entity.setPersistent(true);

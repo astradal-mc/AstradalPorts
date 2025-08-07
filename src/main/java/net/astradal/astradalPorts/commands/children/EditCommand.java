@@ -8,6 +8,8 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.helpers.PortstonePermissions;
 import net.astradal.astradalPorts.integration.TownyHook;
@@ -16,10 +18,14 @@ import net.astradal.astradalPorts.services.PortstoneStorage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ItemType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -31,30 +37,34 @@ public final class EditCommand {
         return Commands.literal("edit")
             .requires(PortstonePermissions.requires("edit"))
             .then(Commands.argument("property", StringArgumentType.word())
-                .suggests((c, b) -> suggest(b, "name", "fee", "icon"))
+                .suggests((c, b) -> suggestProperties(b, "name", "fee", "icon"))
                 .then(Commands.argument("value", StringArgumentType.greedyString())
                     .suggests((context, builder) -> {
                         String prop = StringArgumentType.getString(context, "property");
-                        if (!prop.equalsIgnoreCase("icon")) return builder.buildFuture();
-
-                        // Suggest only item-like materials
-                        for (Material material : Material.values()) {
-                            if (material.isItem()) {
-                                builder.suggest(material.name().toLowerCase());
-                            }
+                        if (prop.equalsIgnoreCase("icon")) {
+                            return suggestMaterials(context, builder);
                         }
                         return builder.buildFuture();
                     })
                     .executes(ctx -> executeEdit(ctx, plugin, storage))));
-
     }
 
-    private static CompletableFuture<Suggestions> suggest(SuggestionsBuilder builder, String... options) {
-        for (String option : options) {
-            if (option.startsWith(builder.getRemaining())) {
-                builder.suggest(option);
+    private static CompletableFuture<Suggestions> suggestProperties(SuggestionsBuilder builder, String... properties) {
+        for (String prop : properties) {
+            builder.suggest(prop);
+        }
+        return builder.buildFuture();
+    }
+
+    private static CompletableFuture<Suggestions> suggestMaterials(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        Registry<@NotNull Material> registry = Registry.MATERIAL;
+
+        for (Material material : registry) {
+            if (material.isItem()) {
+                builder.suggest(material.getKey().getKey());
             }
         }
+
         return builder.buildFuture();
     }
 
@@ -92,6 +102,7 @@ public final class EditCommand {
                 portstone.setDisplayName(value);
                 sender.sendMessage(Component.text("Portstone name updated to '" + value + "'.", NamedTextColor.GREEN));
             }
+
             case "fee" -> {
                 try {
                     double fee = Double.parseDouble(value);
@@ -102,6 +113,7 @@ public final class EditCommand {
                     return 0;
                 }
             }
+
             case "icon" -> {
                 Material newIcon;
 
@@ -113,17 +125,27 @@ public final class EditCommand {
                     }
                     newIcon = hand.getType();
                 } else {
-                    newIcon = Material.matchMaterial(value.toUpperCase());
+                    NamespacedKey key;
+                    try {
+                        key = NamespacedKey.minecraft(value.toLowerCase());
+                    } catch (IllegalArgumentException e) {
+                        player.sendMessage(Component.text("Invalid material key: " + value, NamedTextColor.RED));
+                        return 0;
+                    }
+
+                    newIcon = Registry.MATERIAL.get(key);
                     if (newIcon == null || !newIcon.isItem()) {
-                        player.sendMessage(Component.text("Invalid material: " + value, NamedTextColor.RED));
+                        player.sendMessage(Component.text("Invalid or unusable material: " + value, NamedTextColor.RED));
                         return 0;
                     }
                 }
 
                 portstone.setIcon(newIcon);
                 storage.save(portstone);
+
                 player.sendMessage(Component.text("Portstone icon updated to " + newIcon.name(), NamedTextColor.GREEN));
             }
+
             default -> {
                 sender.sendMessage(Component.text("Unknown property: " + property, NamedTextColor.RED));
                 return 0;
