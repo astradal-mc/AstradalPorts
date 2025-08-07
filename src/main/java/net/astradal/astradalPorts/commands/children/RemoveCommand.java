@@ -7,6 +7,7 @@ import com.mojang.brigadier.context.CommandContext;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.astradal.astradalPorts.AstradalPorts;
+import net.astradal.astradalPorts.helpers.IdSuggestions;
 import net.astradal.astradalPorts.helpers.PortstonePermissions;
 import net.astradal.astradalPorts.model.Portstone;
 import net.astradal.astradalPorts.services.PortstoneStorage;
@@ -27,6 +28,7 @@ public final class RemoveCommand {
             .requires(PortstonePermissions.requires("remove"))
             .executes(ctx -> executeTargeted(ctx, plugin, portstoneStorage))
             .then(Commands.argument("id", StringArgumentType.word())
+                .suggests(IdSuggestions::portstoneIds)
                 .executes(ctx -> executeByID(ctx, plugin, portstoneStorage))
             );
     }
@@ -86,5 +88,5 @@ public final class RemoveCommand {
         sender.sendMessage(Component.text("Portstone with ID '" + idStr + "' removed.", NamedTextColor.GREEN));
         return Command.SINGLE_SUCCESS;
     }
-
 }
+

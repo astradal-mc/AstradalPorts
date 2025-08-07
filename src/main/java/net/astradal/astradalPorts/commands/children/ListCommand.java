@@ -13,6 +13,7 @@ import net.astradal.astradalPorts.model.Portstone;
 import net.astradal.astradalPorts.services.PortstoneStorage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 
@@ -53,15 +54,8 @@ public final class ListCommand  {
                 .append(Component.text(getPortTypeSymbol(p.getType()) + " ", NamedTextColor.GRAY))
                 .append(Component.text(p.getDisplayName(), NamedTextColor.YELLOW))
                 .append(Component.text(" [" + p.getType().toUpperCase() + "]", NamedTextColor.DARK_GRAY))
-                .hoverEvent(Component.text("Click to teleport"))
-                .clickEvent(ClickEvent.runCommand(
-                    String.format("/tppos %s %.1f %.1f %.1f",
-                        p.getLocation().getWorld().getName(),
-                        p.getLocation().getX(),
-                        p.getLocation().getY(),
-                        p.getLocation().getZ()
-                    )
-                ))
+                .hoverEvent(HoverEvent.showText(Component.text("Click to copy ID:\n" + p.getId(), NamedTextColor.GRAY)))
+                .clickEvent(ClickEvent.copyToClipboard(p.getId().toString()))
                 .build();
 
             sender.sendMessage(line);

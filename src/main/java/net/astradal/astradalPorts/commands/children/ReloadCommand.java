@@ -18,7 +18,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 public final class ReloadCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> build(AstradalPorts plugin, PortstoneStorage portstoneStorage, CooldownService cooldownService, HologramService hologramService) {
         return Commands.literal("reload")
-            .requires(PortstonePermissions.requires("info"))
+            .requires(PortstonePermissions.requires("reload"))
             .executes(ctx -> execute(ctx, plugin, portstoneStorage, cooldownService, hologramService));
     }
 

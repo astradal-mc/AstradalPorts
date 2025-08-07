@@ -1,6 +1,7 @@
 package net.astradal.astradalPorts.listeners;
 
 import com.palmergames.bukkit.towny.object.Resident;
+import net.astradal.astradalPorts.helpers.PortstonePermissions;
 import net.astradal.astradalPorts.integration.TownyHook;
 import net.astradal.astradalPorts.model.Portstone;
 import net.astradal.astradalPorts.services.HologramService;
@@ -40,7 +41,7 @@ public class PortstoneBreakListener implements Listener {
         Player player = event.getPlayer();
 
         // Check: Admin permission
-        if (player.hasPermission("astradalports.admin")) {
+        if (PortstonePermissions.has(player, "remove")) {
             // allow
         }
         // Check: Mayor of the town that owns this portstone

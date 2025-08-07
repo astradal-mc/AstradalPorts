@@ -13,6 +13,7 @@ import net.astradal.astradalPorts.model.Portstone;
 import net.astradal.astradalPorts.services.PortstoneStorage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -83,20 +84,36 @@ public final class InfoCommand {
     }
 
     private static void printPortstoneInfo(CommandSender sender, Portstone p) {
+        UUID id = p.getId() != null ? p.getId() : UUID.randomUUID(); // fallback just to be safe
+        String type = p.getType() != null ? p.getType().toUpperCase() : "UNKNOWN";
+        String name = p.getDisplayName() != null ? p.getDisplayName() : "Unnamed";
+        String town = p.getTown() != null ? p.getTown() : "None";
+        String nation = p.getNation() != null ? p.getNation() : "None";
+        String icon = p.getIcon().getKey().getKey();
+        Location loc = p.getLocation();
+        String locString = "Unknown";
+
+        if (loc != null && loc.getWorld() != null) {
+            locString = String.format("%s; %.0f, %.0f, %.0f",
+                loc.getWorld().getName(),
+                loc.getX(),
+                loc.getY(),
+                loc.getZ()
+            );
+        }
+
+        double fee = p.getTravelFee();
+
         sender.sendMessage(Component.text("Portstone Info:", NamedTextColor.GOLD));
-        sender.sendMessage(Component.text("✦ ID: ", NamedTextColor.GRAY).append(Component.text(p.getId().toString(), NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("✦ Type: ", NamedTextColor.GRAY).append(Component.text(p.getType().toUpperCase(), NamedTextColor.AQUA)));
-        sender.sendMessage(Component.text("✦ Name: ", NamedTextColor.GRAY).append(Component.text(p.getDisplayName(), NamedTextColor.YELLOW)));
-        sender.sendMessage(Component.text("✦ Town: ", NamedTextColor.GRAY).append(Component.text(p.getTown(), NamedTextColor.GREEN)));
-        sender.sendMessage(Component.text("✦ Nation: ", NamedTextColor.GRAY).append(Component.text(p.getNation(), NamedTextColor.BLUE)));
-        sender.sendMessage(Component.text("✦ Location: ", NamedTextColor.GRAY).append(Component.text(
-            String.format("%s; %.0f, %.0f, %.0f",
-                p.getLocation().getWorld().getName(),
-                p.getLocation().getX(),
-                p.getLocation().getY(),
-                p.getLocation().getZ()
-            ), NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("✦ Travel Fee: ", NamedTextColor.GRAY).append(Component.text("$" + p.getTravelFee(), NamedTextColor.GOLD)));
+        sender.sendMessage(Component.text("✦ ID: ", NamedTextColor.GRAY).append(Component.text(id.toString(), NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("✦ Type: ", NamedTextColor.GRAY).append(Component.text(type, NamedTextColor.AQUA)));
+        sender.sendMessage(Component.text("✦ Name: ", NamedTextColor.GRAY).append(Component.text(name, NamedTextColor.YELLOW)));
+        sender.sendMessage(Component.text("✦ Icon: ", NamedTextColor.GRAY).append(Component.text(icon, NamedTextColor.DARK_AQUA)));
+        sender.sendMessage(Component.text("✦ Town: ", NamedTextColor.GRAY).append(Component.text(town, NamedTextColor.GREEN)));
+        sender.sendMessage(Component.text("✦ Nation: ", NamedTextColor.GRAY).append(Component.text(nation, NamedTextColor.BLUE)));
+        sender.sendMessage(Component.text("✦ Location: ", NamedTextColor.GRAY).append(Component.text(locString, NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("✦ Travel Fee: ", NamedTextColor.GRAY).append(Component.text("$" + fee, NamedTextColor.GOLD)));
     }
+
 
 }

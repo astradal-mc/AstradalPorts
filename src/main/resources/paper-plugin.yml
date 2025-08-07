@@ -12,3 +12,65 @@ dependencies:
     Towny:
       load: BEFORE
       required: true
+    Vault:
+      load: BEFORE
+      required: false
+
+permissions:
+  astradal.portstone.command.create:
+    description: "Lets player create portstone"
+    default: op
+  astradal.portstone.command.remove:
+    description: "Lets player remove a portstone by ID or by looking at it"
+    default: op
+  astradal.portstone.command.edit:
+    description: "Lets player edit portstone"
+    default: op
+  astradal.portstone.command.info:
+    description: "Lets player get info about the Portstone they're looking at"
+    default: not op
+  astradal.portstone.command.list:
+    description: "Lets player get list of all Registered Portstones"
+    default: op
+  astradal.portstone.command.help:
+    description: "Lets player get the help menu for Portstone commands"
+    default: not op
+  astradal.portstone.command.reload:
+    description: "Lets player reload the AstradalPorts plugin"
+    default: op
+  astradal.portstone.command.version:
+    description: "Lets player view the AstradalPorts plugin version"
+
+commands:
+  portstone-create:
+    description: "Create a Portstone"
+    usage: "/portstone create <type> [name] (while looking at a lodestone)"
+    permission: astradal.portstone.command.create
+  portstone-remove:
+    description: "Remove a Portstone (by id or by looking at it)"
+    usage: "/portstone remove [id] (or look at Portstone)"
+    permission: astradal.portstone.command.remove
+  portstone-edit:
+    description: "Edit the properties of a portstone you're looking at"
+    usage: "/portstone edit <property> <value>"
+    permission: astradal.portstone.command.edit
+  portstone-info:
+    description: "View info of Portstone (by id or by looking at it)"
+    usage: "/portstone info [id]"
+    permission: astradal.portstone.command.info
+  portstone-list:
+    description: "View list of registered Portstones"
+    usage: "/portstone list [type]"
+    permission: astradal.portstone.command.list
+  portstone-help:
+    description: "View usage for all available commands"
+    usage: "/portstone help"
+    permission: astradal.portstone.command.help
+  portstone-reload:
+    description: "Reload the AstradalPorts plugin"
+    usage: "/portstone reload"
+    permission: astradal.portstone.command.reload
+  portstone-version:
+    description: "View the AstradalPorts plugin version"
+    usage: "/portstone version"
+    permission: astradal.portstone.command.version

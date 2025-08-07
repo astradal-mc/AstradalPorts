@@ -8,8 +8,6 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.registry.RegistryAccess;
-import io.papermc.paper.registry.RegistryKey;
 import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.helpers.PortstonePermissions;
 import net.astradal.astradalPorts.integration.TownyHook;
@@ -24,7 +22,6 @@ import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -42,7 +39,7 @@ public final class EditCommand {
                     .suggests((context, builder) -> {
                         String prop = StringArgumentType.getString(context, "property");
                         if (prop.equalsIgnoreCase("icon")) {
-                            return suggestMaterials(context, builder);
+                            return suggestMaterials(builder);
                         }
                         return builder.buildFuture();
                     })
@@ -56,7 +53,7 @@ public final class EditCommand {
         return builder.buildFuture();
     }
 
-    private static CompletableFuture<Suggestions> suggestMaterials(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    private static CompletableFuture<Suggestions> suggestMaterials(SuggestionsBuilder builder) {
         Registry<@NotNull Material> registry = Registry.MATERIAL;
 
         for (Material material : registry) {

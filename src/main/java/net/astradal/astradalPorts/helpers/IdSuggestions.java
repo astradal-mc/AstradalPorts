@@ -13,7 +13,6 @@ public final class IdSuggestions {
 
     public static PortstoneStorage portstoneStorage;
 
-    //Must be set in plugin init
     public static void setStorage(PortstoneStorage s) {
         portstoneStorage = s;
     }
