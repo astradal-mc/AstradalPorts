@@ -1,4 +1,4 @@
 package net.astradal.astradalPorts.services;
 
-public class HologramService {
+public class ConfigService {
 }

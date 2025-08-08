@@ -1,4 +1,4 @@
-package net.astradal.astradalPorts.integration;
+package net.astradal.astradalPorts.services.hooks;
 
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyUniverse;
