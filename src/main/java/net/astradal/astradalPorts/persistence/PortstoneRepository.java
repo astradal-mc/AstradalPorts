@@ -1,23 +1,41 @@
 package net.astradal.astradalPorts.persistence;
 
 import net.astradal.astradalPorts.AstradalPorts;
+import net.astradal.astradalPorts.core.PortType;
 import net.astradal.astradalPorts.core.Portstone;
+import org.bukkit.Material;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+/**
+ * Repository class responsible for CRUD operations on Portstone entities
+ * in the SQLite database. Abstracts database access logic away from the rest of the plugin.
+ */
 public class PortstoneRepository {
 
     private final DatabaseManager databaseManager;
     private final AstradalPorts plugin;
 
+    /**
+     * Constructs a PortstoneRepository with the given plugin instance and database manager.
+     *
+     * @param plugin the main plugin instance for logging
+     * @param databaseManager the database manager providing SQLite connections
+     */
     public PortstoneRepository(AstradalPorts plugin, DatabaseManager databaseManager) {
         this.plugin = plugin;
         this.databaseManager = databaseManager;
     }
 
-    // Save or update a Portstone in the database
+    /**
+     * Saves or updates a Portstone in the database.
+     * Uses SQLite's ON CONFLICT clause to update existing entries based on portstone ID.
+     *
+     * @param portstone the Portstone object to save or update
+     */
     public void savePortstone(Portstone portstone) {
         try (Connection connection = databaseManager.getConnection()) {
             String query = "INSERT INTO portstones (id, type, world, x, y, z, town, nation, name, fee, icon) " +
@@ -26,7 +44,7 @@ public class PortstoneRepository {
                 "type = ?, world = ?, x = ?, y = ?, z = ?, town = ?, nation = ?, name = ?, fee = ?, icon = ?";
 
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, portstone.getId());
+                stmt.setString(1, portstone.getIdAsString());
                 stmt.setString(2, portstone.getType().toString());
                 stmt.setString(3, portstone.getWorld());
                 stmt.setDouble(4, portstone.getX());
@@ -34,9 +52,9 @@ public class PortstoneRepository {
                 stmt.setDouble(6, portstone.getZ());
                 stmt.setString(7, portstone.getTown());
                 stmt.setString(8, portstone.getNation());
-                stmt.setString(9, portstone.getName());
-                stmt.setDouble(10, portstone.getFee());
-                stmt.setString(11, portstone.getIcon());
+                stmt.setString(9, portstone.getDisplayName());
+                stmt.setDouble(10, portstone.getTravelFee());
+                stmt.setString(11, portstone.getIcon().name());
 
                 // For UPDATE part of the query
                 stmt.setString(12, portstone.getType().toString());
@@ -46,9 +64,9 @@ public class PortstoneRepository {
                 stmt.setDouble(16, portstone.getZ());
                 stmt.setString(17, portstone.getTown());
                 stmt.setString(18, portstone.getNation());
-                stmt.setString(19, portstone.getName());
-                stmt.setDouble(20, portstone.getFee());
-                stmt.setString(21, portstone.getIcon());
+                stmt.setString(19, portstone.getDisplayName());
+                stmt.setDouble(20, portstone.getTravelFee());
+                stmt.setString(21, portstone.getIcon().name());
 
                 stmt.executeUpdate();
             }
@@ -58,7 +76,12 @@ public class PortstoneRepository {
         }
     }
 
-    // Get a Portstone by ID
+    /**
+     * Retrieves a Portstone from the database by its ID.
+     *
+     * @param id the unique ID of the portstone
+     * @return the Portstone object if found, or null if not found or on error
+     */
     public Portstone getPortstoneById(String id) {
         try (Connection connection = databaseManager.getConnection()) {
             String query = "SELECT * FROM portstones WHERE id = ?";
@@ -67,8 +90,8 @@ public class PortstoneRepository {
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         return new Portstone(
-                            rs.getString("id"),
-                            rs.getString("type"),
+                            UUID.fromString(rs.getString("id")),
+                            PortType.fromString(rs.getString("type")),
                             rs.getString("world"),
                             rs.getDouble("x"),
                             rs.getDouble("y"),
@@ -77,7 +100,7 @@ public class PortstoneRepository {
                             rs.getString("nation"),
                             rs.getString("name"),
                             rs.getDouble("fee"),
-                            rs.getString("icon")
+                            Material.getMaterial(rs.getString("icon"))
                         );
                     }
                 }
@@ -88,7 +111,11 @@ public class PortstoneRepository {
         return null;
     }
 
-    // Get all Portstones (for listing, etc.)
+    /**
+     * Retrieves all portstones stored in the database.
+     *
+     * @return a list of all Portstones; empty list if none found or on error
+     */
     public List<Portstone> getAllPortstones() {
         List<Portstone> portstones = new ArrayList<>();
         try (Connection connection = databaseManager.getConnection()) {
@@ -96,8 +123,8 @@ public class PortstoneRepository {
             try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
                 while (rs.next()) {
                     portstones.add(new Portstone(
-                        rs.getString("id"),
-                        rs.getString("type"),
+                        UUID.fromString(rs.getString("id")),
+                        PortType.fromString(rs.getString("type")),
                         rs.getString("world"),
                         rs.getDouble("x"),
                         rs.getDouble("y"),
@@ -106,7 +133,7 @@ public class PortstoneRepository {
                         rs.getString("nation"),
                         rs.getString("name"),
                         rs.getDouble("fee"),
-                        rs.getString("icon")
+                        Material.getMaterial(rs.getString("icon"))
                     ));
                 }
             }
@@ -116,7 +143,11 @@ public class PortstoneRepository {
         return portstones;
     }
 
-    // Remove a Portstone by ID
+    /**
+     * Deletes a Portstone from the database by its ID.
+     *
+     * @param id the unique ID of the portstone to delete
+     */
     public void deletePortstone(String id) {
         try (Connection connection = databaseManager.getConnection()) {
             String query = "DELETE FROM portstones WHERE id = ?";
