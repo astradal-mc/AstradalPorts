@@ -25,6 +25,9 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     compileOnly 'com.github.TownyAdvanced:Towny:0.101.2.1'
     compileOnly "com.github.MilkBowl:VaultAPI:1.7.1"
+
+    testImplementation 'org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.0.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
 }
 
 tasks {
@@ -61,4 +64,8 @@ processResources {
     filesMatching('paper-plugin.yml') {
         expand props
     }
+}
+
+test {
+    useJUnitPlatform()
 }

@@ -1,0 +1,19 @@
+cooldowns:
+  air: 30
+  land: 90
+  sea: 0
+
+warmups:
+  air: 0
+  land: 3
+  sea: 0
+
+land:
+  maxRange: 2000
+
+economy:
+  enabled: true
+  requireBalance: true
+
+gui:
+  titleColor: black
