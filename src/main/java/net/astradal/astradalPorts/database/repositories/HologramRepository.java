@@ -1,7 +1,8 @@
-package net.astradal.astradalPorts.persistence;
+package net.astradal.astradalPorts.database.repositories;
 
 
 import net.astradal.astradalPorts.AstradalPorts;
+import net.astradal.astradalPorts.database.DatabaseManager;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

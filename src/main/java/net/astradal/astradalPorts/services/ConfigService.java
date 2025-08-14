@@ -14,17 +14,14 @@ public class ConfigService {
 
     private final AstradalPorts plugin;
 
-    // Cached cooldowns by port type (seconds)
+    // Cached values by port type (all lowercase keys)
     private final Map<String, Integer> cooldowns = new HashMap<>();
-    // Cached warmups by port type (seconds)
     private final Map<String, Integer> warmups = new HashMap<>();
-    // Cached land max range
-    private int landMaxRange = 2000;
-    // Economy enabled
+    private final Map<String, Integer> ranges = new HashMap<>();
+
+    // Cached global settings
     private boolean economyEnabled = true;
-    // Economy requires balance
     private boolean economyRequireBalance = true;
-    // GUI title color (string)
     private String guiTitleColor = "black";
 
     public ConfigService(AstradalPorts plugin) {
@@ -39,32 +36,27 @@ public class ConfigService {
         plugin.reloadConfig();
         var config = plugin.getConfig();
 
-        // Load cooldowns
+        // Clear all cached maps before loading new values
         cooldowns.clear();
-        ConfigurationSection cooldownSection = config.getConfigurationSection("cooldowns");
-        if (cooldownSection != null) {
-            for (String key : cooldownSection.getKeys(false)) {
-                cooldowns.put(key.toLowerCase(), cooldownSection.getInt(key, 0));
-            }
-        }
-
-        // Load warmups
         warmups.clear();
-        ConfigurationSection warmupSection = config.getConfigurationSection("warmups");
-        if (warmupSection != null) {
-            for (String key : warmupSection.getKeys(false)) {
-                warmups.put(key.toLowerCase(), warmupSection.getInt(key, 0));
+        ranges.clear();
+
+        // --- Load Portstone Settings  ---
+        ConfigurationSection portstoneSection = config.getConfigurationSection("portstones");
+        if (portstoneSection != null) {
+            // Loop through each port type key (e.g., "air", "sea", "land")
+            for (String typeKey : portstoneSection.getKeys(false)) {
+                String key = typeKey.toLowerCase();
+                // Get the cooldown, warmup, and range for each type
+                cooldowns.put(key, portstoneSection.getInt(typeKey + ".cooldown", 0));
+                warmups.put(key, portstoneSection.getInt(typeKey + ".warmup", 0));
+                ranges.put(key, portstoneSection.getInt(typeKey + ".range", -1));
             }
         }
 
-        // Land max range
-        landMaxRange = config.getInt("land.maxRange", 2000);
-
-        // Economy settings
+        // --- Economy and GUI settings remain the same ---
         economyEnabled = config.getBoolean("economy.enabled", true);
         economyRequireBalance = config.getBoolean("economy.requireBalance", true);
-
-        // GUI title color
         guiTitleColor = config.getString("gui.titleColor", "black");
     }
 
@@ -89,12 +81,13 @@ public class ConfigService {
     }
 
     /**
-     * Gets the maximum allowed range for land portstones.
+     * Gets the maximum allowed range for a given port type.
      *
-     * @return max range in blocks
+     * @param portType port type key (case-insensitive)
+     * @return max range in blocks, or -1 if disabled/not set
      */
-    public int getLandMaxRange() {
-        return landMaxRange;
+    public int getRange(String portType) {
+        return ranges.getOrDefault(portType.toLowerCase(), -1);
     }
 
     /**

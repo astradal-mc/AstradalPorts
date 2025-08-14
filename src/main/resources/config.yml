@@ -1,15 +1,18 @@
-cooldowns:
-  air: 30
-  land: 90
-  sea: 0
+plugin-version: ${version}
 
-warmups:
-  air: 0
-  land: 3
-  sea: 0
-
-land:
-  maxRange: 2000
+portstones:
+  air:
+    cooldown: 600 # in seconds
+    warmup: 5 # in seconds
+    range: -1 # -1 to disable
+  sea:
+    cooldown: 1200 # in seconds
+    warmup: 5 # in seconds
+    range: -1 # -1 to disable
+  land:
+    cooldown: 1200 # in seconds
+    warmup: 5 # in seconds
+    range: 1000 # -1 to disable
 
 economy:
   enabled: true

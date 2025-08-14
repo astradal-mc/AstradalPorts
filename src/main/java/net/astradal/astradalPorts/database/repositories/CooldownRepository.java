@@ -1,6 +1,6 @@
-package net.astradal.astradalPorts.persistence;
+package net.astradal.astradalPorts.database.repositories;
 
-import net.astradal.astradalPorts.AstradalPorts;
+import net.astradal.astradalPorts.database.DatabaseManager;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 /**
  * Repository for managing cooldown data persistence in the SQLite database.
@@ -17,16 +18,16 @@ import java.util.UUID;
 public class CooldownRepository {
 
     private final DatabaseManager databaseManager;
-    private final AstradalPorts plugin;
+    private final Logger logger;
 
     /**
      * Constructs a CooldownRepository with the given plugin and database manager.
      *
-     * @param plugin the main AstradalPorts plugin instance for logging
+     * @param logger Logger instance for logging
      * @param databaseManager the DatabaseManager instance to handle DB connections
      */
-    public CooldownRepository(AstradalPorts plugin, DatabaseManager databaseManager) {
-        this.plugin = plugin;
+    public CooldownRepository(Logger logger, DatabaseManager databaseManager) {
+        this.logger = logger;
         this.databaseManager = databaseManager;
     }
 
@@ -50,7 +51,7 @@ public class CooldownRepository {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to load cooldowns for player " + playerUUID + ": " + e.getMessage());
+            logger.severe("Failed to load cooldowns for player " + playerUUID + ": " + e.getMessage());
         }
 
         return cooldowns;
@@ -79,7 +80,7 @@ public class CooldownRepository {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to get last use cooldown for player " + playerUUID + " type " + type + ": " + e.getMessage());
+            logger.severe("Failed to get last use cooldown for player " + playerUUID + " type " + type + ": " + e.getMessage());
         }
         return 0L;
     }
@@ -105,7 +106,7 @@ public class CooldownRepository {
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to save cooldown for player " + playerUUID + " type " + type + ": " + e.getMessage());
+            logger.severe("Failed to save cooldown for player " + playerUUID + " type " + type + ": " + e.getMessage());
         }
     }
 
@@ -126,7 +127,7 @@ public class CooldownRepository {
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to delete cooldown for player " + playerUUID + " type " + type + ": " + e.getMessage());
+            logger.severe("Failed to delete cooldown for player " + playerUUID + " type " + type + ": " + e.getMessage());
         }
     }
 }
