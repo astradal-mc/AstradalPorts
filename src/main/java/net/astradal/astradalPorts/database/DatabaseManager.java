@@ -76,4 +76,33 @@ public class DatabaseManager {
             connection.set(null); // <--- clear the reference so next connect creates a new one
         }
     }
+
+    /**
+     * Reads a SQL file from the plugin's resources, splits it into individual statements,
+     * and executes them to set up the database schema.
+     * <p>
+     * This is typically used on plugin startup to ensure all necessary tables exist.
+     * The SQL file should use semicolons (;) to separate statements.
+     *
+     * @param path The absolute path to the schema file within the JAR's resources (e.g., "/schema.sql").
+     * @throws IllegalStateException if the resource file at the given path cannot be found.
+     * @throws RuntimeException if there is an SQL error during execution or an I/O error reading the file.
+     */
+    public void runSchemaFromResource(String path) {
+        try (InputStream stream = getClass().getResourceAsStream(path)) {
+            if (stream == null) throw new IllegalStateException("Missing schema resource: " + path);
+            String sql = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+            for (String stmt : sql.split(";")) {
+                stmt = stmt.trim();
+                if (!stmt.isEmpty()) {
+                    try (var s = getConnection().createStatement()) {
+                        s.execute(stmt);
+                    }
+                }
+            }
+        } catch (IOException | SQLException e) {
+            logger.severe("Failed to load schema: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
 }

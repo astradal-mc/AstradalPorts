@@ -46,6 +46,9 @@ public class Portstone {
     /** Icon material displayed for this Portstone in GUIs; defaults to LODESTONE */
     private Material icon;
 
+    /** Whether the portstone has been disabled */
+    private boolean enabled;
+
     /**
      * Constructs a Portstone instance.
      *
@@ -61,7 +64,7 @@ public class Portstone {
      * @param fee travel fee charged for use
      * @param icon icon material shown in GUIs; nullable defaults to LODESTONE
      */
-    public Portstone(UUID id, PortType type, String world, double x, double y, double z, String town, String nation, String displayName, double fee, Material icon) {
+    public Portstone(UUID id, PortType type, String world, double x, double y, double z, String town, String nation, String displayName, double fee, Material icon, boolean enabled) {
         this.id = id;
         this.type = type;
         this.world = world;
@@ -73,6 +76,7 @@ public class Portstone {
         this.travelFee = fee;
         this.displayName = displayName;
         this.icon = icon;
+        this.enabled = enabled;
     }
 
     /**
@@ -229,5 +233,23 @@ public class Portstone {
             throw new IllegalStateException("World " + world + " not loaded or does not exist.");
         }
         return new Location(w, x, y, z);
+    }
+
+    /**
+     * Gets the state of a portstone
+     *
+     * @return whether the portstone is enabled
+     */
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    /**
+     * Sets the state of a portstone
+     *
+     * @param enabled disables or enables a portstone
+     */
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }

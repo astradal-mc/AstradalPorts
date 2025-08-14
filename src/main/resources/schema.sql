@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS portstones (
     name TEXT NOT NULL,
     fee REAL DEFAULT 0,
     icon TEXT
+    enabled BOOLEAN NOT NULL DEFAULT 1
 );
 
 -- Create table for Cooldowns

@@ -1,7 +1,6 @@
 package net.astradal.astradalPorts.database.repositories;
 
 
-import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.database.DatabaseManager;
 
 import java.sql.Connection;
@@ -9,24 +8,26 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 /**
  * Repository class for managing hologram persistence.
  * Stores and retrieves hologram entity UUIDs associated with portstones.
  */
+@SuppressWarnings("ClassCanBeRecord")
 public class HologramRepository {
 
     private final DatabaseManager databaseManager;
-    private final AstradalPorts plugin;
+    private final Logger logger;
 
     /**
      * Constructs a HologramRepository with the specified plugin and database manager.
      *
-     * @param plugin the main plugin instance for logging
+     * @param logger          for logging errors
      * @param databaseManager the database manager to handle SQLite connections
      */
-    public HologramRepository(AstradalPorts plugin, DatabaseManager databaseManager) {
-        this.plugin = plugin;
+    public HologramRepository(Logger logger, DatabaseManager databaseManager) {
+        this.logger = logger;
         this.databaseManager = databaseManager;
     }
 
@@ -48,7 +49,7 @@ public class HologramRepository {
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to save hologram for portstone " + portstoneId + ": " + e.getMessage());
+            logger.severe("Failed to save hologram for portstone " + portstoneId + ": " + e.getMessage());
         }
     }
 
@@ -72,7 +73,7 @@ public class HologramRepository {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to retrieve hologram for portstone " + portstoneId + ": " + e.getMessage());
+            logger.severe("Failed to retrieve hologram for portstone " + portstoneId + ": " + e.getMessage());
         }
 
         return null;
@@ -93,7 +94,7 @@ public class HologramRepository {
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to delete hologram for portstone " + portstoneId + ": " + e.getMessage());
+            logger.severe("Failed to delete hologram for portstone " + portstoneId + ": " + e.getMessage());
         }
     }
 }

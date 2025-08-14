@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,7 +18,7 @@ public class HologramRepositoryTest extends BaseRepositoryTest {
     void initialize() {
         // The 'mockPlugin' and 'mockDbManager' fields are inherited and already
         // configured by the setup() method in BaseRepositoryTest.
-        repository = new HologramRepository(mockPlugin, mockDbManager);
+        repository = new HologramRepository(Logger.getLogger("TestLogger"), mockDbManager);
     }
 
     // Test constants

@@ -15,6 +15,7 @@ import java.util.logging.Logger;
  * Manages CRUD (Create, Read, Update, Delete) operations for Portstone objects
  * in the database. This class handles all direct SQL interaction for the 'portstones' table.
  */
+@SuppressWarnings("ClassCanBeRecord")
 public class PortstoneRepository {
 
     private final DatabaseManager databaseManager;
@@ -43,7 +44,7 @@ public class PortstoneRepository {
         // exists (a conflict), it updates the existing row with the new values from
         // the attempted insert, which are referenced via the 'excluded' keyword.
         String query = """
-            INSERT INTO portstones (id, type, world, x, y, z, town, nation, name, fee, icon)
+            INSERT INTO portstones (id, type, world, x, y, z, town, nation, name, fee, icon, enabled)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 type = excluded.type,
@@ -56,12 +57,13 @@ public class PortstoneRepository {
                 name = excluded.name,
                 fee = excluded.fee,
                 icon = excluded.icon
+                enabled = excluded.enabled;
             """;
 
         try (Connection connection = databaseManager.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
 
-            // Set the 11 parameters for the INSERT clause.
+            // Set the 12 parameters for the INSERT clause.
             stmt.setString(1, portstone.getIdAsString());
             stmt.setString(2, portstone.getType().toString());
             stmt.setString(3, portstone.getWorld());
@@ -73,8 +75,8 @@ public class PortstoneRepository {
             stmt.setString(9, portstone.getDisplayName());
             stmt.setDouble(10, portstone.getTravelFee());
             stmt.setString(11, portstone.getIcon() != null ? portstone.getIcon().name() : Material.STONE.name());
+            stmt.setBoolean(12, portstone.isEnabled());
 
-            // No need to set parameters 12-21 anymore, as the 'excluded' keyword handles it.
             stmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -99,11 +101,21 @@ public class PortstoneRepository {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     Material mat = Material.getMaterial(rs.getString("icon"));
-                    if (mat == null) mat = Material.STONE; // Default icon if saved one is invalid
+                    if (mat == null) mat = Material.STONE;
 
+                    // 1. Get the type string from the database.
+                    String typeString = rs.getString("type");
+
+                    // 2. Safely parse the string into an enum, providing a default if it fails.
+                    PortType type = PortType.fromString(typeString).orElseGet(() -> {
+                        logger.warning("Invalid portstone type '" + typeString + "' in database for ID " + id + ". Defaulting to LAND.");
+                        return PortType.LAND;
+                    });
+
+                    // 3. Pass the resolved enum to the constructor.
                     return new Portstone(
                         UUID.fromString(rs.getString("id")),
-                        PortType.fromString(rs.getString("type")),
+                        type, // Now using the correct type
                         rs.getString("world"),
                         rs.getDouble("x"),
                         rs.getDouble("y"),
@@ -112,13 +124,14 @@ public class PortstoneRepository {
                         rs.getString("nation"),
                         rs.getString("name"),
                         rs.getDouble("fee"),
-                        mat
+                        mat,
+                        rs.getBoolean("enabled")
                     );
                 }
             }
         } catch (SQLException | IllegalArgumentException e) {
             logger.severe("Error fetching portstone by ID: " + e);
-            throw new RuntimeException("Failed to fetch portstone by ID", e); // Rethrow for tests
+            throw new RuntimeException("Failed to fetch portstone by ID", e);
         }
 
         return null;
@@ -139,11 +152,20 @@ public class PortstoneRepository {
 
             while (rs.next()) {
                 Material mat = Material.getMaterial(rs.getString("icon"));
-                if (mat == null) mat = Material.STONE; // Default icon
+                if (mat == null) mat = Material.STONE;
+
+                String typeString = rs.getString("type");
+                String id = rs.getString("id"); // Get ID for logging, just in case
+
+                // Safely parse the enum, providing a default for invalid data
+                PortType type = PortType.fromString(typeString).orElseGet(() -> {
+                    logger.warning("Invalid portstone type '" + typeString + "' in database for ID " + id + ". Defaulting to LAND.");
+                    return PortType.LAND;
+                });
 
                 portstones.add(new Portstone(
-                    UUID.fromString(rs.getString("id")),
-                    PortType.fromString(rs.getString("type")),
+                    UUID.fromString(id),
+                    type, // Use the resolved enum
                     rs.getString("world"),
                     rs.getDouble("x"),
                     rs.getDouble("y"),
@@ -152,12 +174,13 @@ public class PortstoneRepository {
                     rs.getString("nation"),
                     rs.getString("name"),
                     rs.getDouble("fee"),
-                    mat
+                    mat,
+                    rs.getBoolean("enabled")
                 ));
             }
         } catch (SQLException | IllegalArgumentException e) {
             logger.severe("Error fetching all portstones: " + e);
-            throw new RuntimeException("Failed to fetch all portstones", e); // Rethrow for tests
+            throw new RuntimeException("Failed to fetch all portstones", e);
         }
         return portstones;
     }

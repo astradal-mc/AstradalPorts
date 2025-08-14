@@ -1,4 +1,4 @@
 package net.astradal.astradalPorts.events;
 
-public class PortstoneRenameEvent {
+public class PortstonePropertyChangeEvent {
 }

@@ -15,6 +15,7 @@ import java.util.logging.Logger;
  * Repository for managing cooldown data persistence in the SQLite database.
  * Provides CRUD operations for player cooldowns identified by player UUID and cooldown type.
  */
+@SuppressWarnings("ClassCanBeRecord")
 public class CooldownRepository {
 
     private final DatabaseManager databaseManager;
