@@ -4,6 +4,7 @@ import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.core.PortstoneManager;
 import net.astradal.astradalPorts.database.repositories.HologramRepository;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -121,11 +122,24 @@ public class HologramService {
 
     private Location getHologramLocation(Location portstoneLocation) {
         // Center the hologram on the block and raise it
-        return portstoneLocation.clone().add(0.5, 2, 0.5);
+        return portstoneLocation.clone().add(0.5, 1.5, 0.5);
     }
 
     private Component generateHologramText(Portstone portstone) {
-        // This can be customized later, maybe using a PortstoneFormatter class
-        return Component.text(portstone.getDisplayName());
+        // Line 1: The Portstone's display name, always shown.
+        Component displayName = Component.text(portstone.getDisplayName(), NamedTextColor.AQUA);
+
+        // Line 2: Always starts with the type.
+        Component secondLine = Component.text("[" + portstone.getType().name() + "]", NamedTextColor.GRAY);
+
+        // Conditionally add the "Disabled" status only if the portstone is not enabled.
+        if (!portstone.isEnabled()) {
+            secondLine = secondLine
+                .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
+                .append(Component.text("Disabled", NamedTextColor.RED));
+        }
+
+        // Combine the two lines.
+        return displayName.append(Component.newline()).append(secondLine);
     }
 }

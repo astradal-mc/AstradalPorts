@@ -28,9 +28,9 @@ public class HologramListener implements Listener {
 
     @EventHandler
     public void onPortstonePropertyChange(PortstonePropertyChangeEvent event) {
-        // We only need to update the hologram if the name changes.
-        // The service can handle other property changes in the future if needed.
-        if (event.getProperty() == PortstoneProperty.NAME) {
+        PortstoneProperty property = event.getProperty();
+
+        if (property == PortstoneProperty.NAME || property == PortstoneProperty.ENABLED) {
             hologramService.createOrUpdateHologram(event.getPortstone());
         }
     }
