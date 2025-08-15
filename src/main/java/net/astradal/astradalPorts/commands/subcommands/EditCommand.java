@@ -81,6 +81,11 @@ public final class EditCommand {
         // 4. Perform the edit and fire the event
         switch (property) {
             case NAME -> {
+                if (manager.isDisplayNameTaken(value, portstone.getId())) {
+                    player.sendMessage(Component.text("That display name is already in use by another portstone.", NamedTextColor.RED));
+                    return 0;
+                }
+
                 String oldName = portstone.getDisplayName();
                 portstone.setDisplayName(value);
                 manager.savePortstone(portstone);
