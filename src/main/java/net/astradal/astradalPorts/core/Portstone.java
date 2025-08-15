@@ -32,7 +32,7 @@ public class Portstone {
     private final double z;
 
     /** Town owning the Portstone; nullable if none */
-    private final String town;
+    private String town;
 
     /** Nation owning the Portstone; nullable if none */
     private final String nation;
@@ -251,5 +251,9 @@ public class Portstone {
      */
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public void setTown(String newName) {
+        this.town = newName;
     }
 }
