@@ -108,7 +108,7 @@ public class HologramService {
             throw new IllegalStateException("Cannot spawn hologram in a null world for portstone " + portstone.getId());
         }
 
-        return world.spawn(location, TextDisplay.class, entity -> {
+        return world.spawn(getHologramLocation(portstone.getLocation()), TextDisplay.class, entity -> {
             entity.text(generateHologramText(portstone));
             entity.setBillboard(Display.Billboard.CENTER);
             entity.setSeeThrough(false);
@@ -121,7 +121,7 @@ public class HologramService {
 
     private Location getHologramLocation(Location portstoneLocation) {
         // Center the hologram on the block and raise it
-        return portstoneLocation.clone().add(0.5, 1.5, 0.5);
+        return portstoneLocation.clone().add(0.5, 2, 0.5);
     }
 
     private Component generateHologramText(Portstone portstone) {
