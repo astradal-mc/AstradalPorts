@@ -93,7 +93,7 @@ public class HologramServiceTest {
 
         Component capturedText = componentCaptor.getValue();
         String plainText = PlainTextComponentSerializer.plainText().serialize(capturedText);
-        assertEquals("Test Port", plainText);
+        assertEquals("Test Port\n[LAND]", plainText);
 
         // Get the values from the mocks/spies BEFORE the verify call.
         final String expectedPortstoneId = testPortstone.getId().toString();
