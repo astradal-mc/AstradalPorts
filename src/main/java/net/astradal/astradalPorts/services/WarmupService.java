@@ -9,6 +9,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import net.astradal.astradalPorts.services.hooks.EconomyHook;
 import net.astradal.astradalPorts.services.hooks.TownyHook;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -111,8 +112,17 @@ public class WarmupService implements Listener {
             return;
         }
 
-        // Teleport the player if the event was not cancelled
-        player.teleportAsync(destination.getLocation());
+        // --- Calculate the Safe Arrival Location ---
+        // Get the destination block's location and add to it for a safe arrival spot.
+        Location arrivalLocation = destination.getLocation().clone().add(0.5, 1.0, 0.5);
+        // Preserve the player's camera direction
+        arrivalLocation.setYaw(player.getLocation().getYaw());
+        arrivalLocation.setPitch(player.getLocation().getPitch());
+
+        // Teleport the player to the calculated safe spot
+        player.teleportAsync(arrivalLocation).thenRun(() -> {
+            player.sendMessage(Component.text("Teleported to " + destination.getDisplayName(), NamedTextColor.GREEN));
+        });
 
         // --- 4. Apply Cooldown ---
         cooldownService.applyCooldown(player, destination.getType());

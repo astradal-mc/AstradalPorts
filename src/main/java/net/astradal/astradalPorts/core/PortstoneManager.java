@@ -117,7 +117,7 @@ public class PortstoneManager {
 
         Portstone portstone = new Portstone(
             UUID.randomUUID(), type, target.getWorld().getName(),
-            target.getX() + 0.5, target.getY() + 1.0, target.getZ() + 0.5,
+            target.getX(), target.getY(), target.getZ(),
             townName, nationName, displayName, 0.0, type.getDefaultIcon(), true
         );
 
@@ -148,6 +148,21 @@ public class PortstoneManager {
     // Define a custom exception for removal failures
     public static class PortstoneRemovalException extends Exception {
         public PortstoneRemovalException(String message) { super(message); }
+    }
+
+    /**
+     * Removes ALL portstones from the cache and the database.
+     * This is a destructive operation intended for admin use.
+     */
+    public void removeAllPortstones() {
+        // Create a copy of the values to avoid ConcurrentModificationException while iterating
+        List<Portstone> portstonesToRemove = new ArrayList<>(portstoneCacheById.values());
+
+        // Call the single removal method for each portstone to ensure events are fired
+        // and caches/holograms are cleaned up properly for each one.
+        for (Portstone portstone : portstonesToRemove) {
+            removePortstone(portstone);
+        }
     }
 
     /**
@@ -303,10 +318,14 @@ public class PortstoneManager {
         if (customName != null && !customName.isBlank()) {
             return customName;
         }
-        String lowerCase = type.name().substring(1).toLowerCase() + " Port";
-        if (PortType.AIR.equals(type)) {
-            return nationName + " " + type.name().charAt(0) + lowerCase;
+
+        // Creates a nicely capitalized string like "Land", "Sea", or "Air"
+        String typeName = type.name().charAt(0) + type.name().substring(1).toLowerCase();
+
+        if (type == PortType.AIR) {
+            // nationName is guaranteed to be non-null by the logic in createPortstone
+            return nationName + " " + typeName + " Port";
         }
-        return townName + " " + type.name().charAt(0) + lowerCase;
+        return townName + " " + typeName + " Port";
     }
 }
