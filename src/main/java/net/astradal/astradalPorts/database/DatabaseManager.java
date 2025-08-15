@@ -38,7 +38,6 @@ public class DatabaseManager {
             if (connection.get() == null || connection.get().isClosed()) {
                 Class.forName("org.sqlite.JDBC");
                 connection.set(DriverManager.getConnection(dbUrl));
-                logger.info("Database connected successfully.");
             }
         } catch (SQLException | ClassNotFoundException e) {
             logger.severe("Database connection failed: " + e.getMessage());
