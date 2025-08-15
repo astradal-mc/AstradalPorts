@@ -67,7 +67,7 @@ public class AstradalPorts extends JavaPlugin {
 
         // --- 6. Initialize Services ---
         this.cooldownService = new CooldownService(this.cooldownRepository, this.configService);
-        this.guiService = new GUIService(this);
+        this.guiService = new GUIService(this, economyHook);
         this.hologramService = new HologramService(this.getLogger(), this.hologramRepository);
         this.warmupService = new WarmupService(this, this.configService, this.cooldownService, this.economyHook, this.townyHook);
 
@@ -121,6 +121,10 @@ public class AstradalPorts extends JavaPlugin {
         pm.registerEvents(new GUIListener(this), this);
         pm.registerEvents(this.warmupService, this);
         pm.registerEvents(new BlockBreakListener(this.portstoneManager, this.townyHook), this);
+
+        if (this.townyHook.isEnabled()) {
+            pm.registerEvents(new TownyListener(this.portstoneManager, this.getLogger()), this);
+        }
     }
 
     // --- Public Getters for other classes to use ---
