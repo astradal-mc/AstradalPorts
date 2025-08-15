@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Called when a Portstone is about to be removed.
  */
+@SuppressWarnings("unused")
 public class PortstoneRemoveEvent extends Event {
 
     private static final HandlerList handlers = new HandlerList();

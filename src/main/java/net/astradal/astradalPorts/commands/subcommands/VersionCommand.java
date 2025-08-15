@@ -28,6 +28,7 @@ public final class VersionCommand {
     /**
      * Executes the version command, sending the plugin's version to the sender.
      */
+    @SuppressWarnings("SameReturnValue")
     private static int execute(CommandContext<CommandSourceStack> ctx, AstradalPorts plugin) {
         CommandSender sender = ctx.getSource().getSender();
 

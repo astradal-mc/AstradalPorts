@@ -59,12 +59,11 @@ public class PortstoneManager {
      *
      * @param player The player creating the portstone.
      * @param type   The PortType for the new portstone.
-     * @return The newly created Portstone object.
      * @throws PortstoneCreationException if any validation fails.
      */
-    public Portstone createPortstone(Player player, PortType type) throws PortstoneCreationException {
+    public void createPortstone(Player player, PortType type) throws PortstoneCreationException {
         // Call the main creation method with a null custom name.
-        return this.createPortstone(player, type, null);
+        this.createPortstone(player, type, null);
     }
 
     /**
@@ -109,6 +108,8 @@ public class PortstoneManager {
             if (nationHasAirshipPort(nationName)) {
                 throw new PortstoneCreationException("This nation already has an airship port registered.");
             }
+
+            townName = null;
         }
         // You could add similar logic for one land/sea port per town here
 

@@ -6,8 +6,8 @@ import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import net.astradal.astradalPorts.commands.PortstonePermissions;
+import net.astradal.astradalPorts.core.PortType;
 import net.astradal.astradalPorts.core.Portstone;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -26,7 +26,7 @@ public class TownyHook {
     private final Logger logger;
     private boolean enabled = false;
     private TownyAPI townyAPI;
-    private EconomyHook economy;
+    private final EconomyHook economy;
 
     public TownyHook(Logger logger, EconomyHook economy) {
         this.logger = logger;
@@ -89,6 +89,7 @@ public class TownyHook {
      * @param portstone The portstone being edited.
      * @return true if the player has permission to edit.
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean canEdit(Player player, Portstone portstone) {
         if (!enabled) return false;
 
@@ -109,17 +110,47 @@ public class TownyHook {
             return false;
         }
 
-        // If the resident is a mayor, their town is guaranteed to exist.
-        // We just need to check if their town's name matches the portstone's town.
-        return resident.isMayor() &&
-            (resident.getTownOrNull() != null && resident.getTownOrNull().getName().equals(townNameOpt.get()));
+        // Logic for AIR ports (Nation-level)
+        if (portstone.getType() == PortType.AIR) {
+            String portstoneNationName = portstone.getNation();
+            if (portstoneNationName == null || !resident.hasNation()) {
+                return false;
+            }
+
+            // Get the resident's nation and perform an explicit null check
+            Nation residentNation = resident.getNationOrNull();
+            if (residentNation == null) {
+                return false;
+            }
+
+            return residentNation.getName().equals(portstoneNationName) &&
+                (resident.isKing() || resident.hasNationRank("assistant"));
+        }
+
+        // Logic for LAND and SEA ports (Town-level)
+        else {
+            String portstoneTownName = portstone.getTown();
+            // We can combine the permission and null check here
+            if (portstoneTownName == null || !resident.isMayor()) {
+                return false;
+            }
+
+            // Get the resident's town and perform an explicit null check
+            Town residentTown = resident.getTownOrNull();
+            if (residentTown == null) {
+                return false;
+            }
+
+            return residentTown.getName().equals(portstoneTownName);
+        }
     }
 
     public void depositToTownBank(String townName, double amount) {
         if (!enabled || amount <= 0) return;
 
         Town town = townyAPI.getTown(townName);
-        if (town != null && town.getAccount().getUUID() != null) {
+        if (town != null) {
+            town.getAccount();
             OfflinePlayer townAccount = Bukkit.getOfflinePlayer(town.getAccount().getUUID());
             // This assumes you have an EconomyHook to do the actual deposit
             economy.deposit(townAccount, amount);

@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Called after a property on a Portstone has been changed.
  */
+@SuppressWarnings("unused")
 public class PortstonePropertyChangeEvent extends Event {
 
     private static final HandlerList handlers = new HandlerList();

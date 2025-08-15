@@ -26,6 +26,7 @@ public final class RemoveAllCommand {
             );
     }
 
+    @SuppressWarnings("SameReturnValue")
     private static int sendConfirmation(CommandContext<CommandSourceStack> ctx) {
         CommandSender sender = ctx.getSource().getSender();
 
@@ -45,6 +46,7 @@ public final class RemoveAllCommand {
         return Command.SINGLE_SUCCESS;
     }
 
+    @SuppressWarnings("SameReturnValue")
     private static int executeRemoveAll(CommandContext<CommandSourceStack> ctx, AstradalPorts plugin) {
         CommandSender sender = ctx.getSource().getSender();
 

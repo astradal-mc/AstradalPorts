@@ -47,6 +47,7 @@ public class PortstoneCreateEvent extends Event {
      *
      * @return The static handler list.
      */
+    @SuppressWarnings("unused")
     public static HandlerList getHandlerList() {
         return handlers;
     }

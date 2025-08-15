@@ -57,6 +57,7 @@ public enum PortType {
      *
      * @return The default material, which is always {@code Material.LODESTONE}.
      */
+    @SuppressWarnings("SameReturnValue")
     public Material getDefaultIcon() {
         return Material.LODESTONE;
     }

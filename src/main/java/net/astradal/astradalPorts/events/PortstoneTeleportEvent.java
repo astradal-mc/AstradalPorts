@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
  * Called just before a player is teleported via a Portstone.
  * This event is cancellable.
  */
+@SuppressWarnings("unused")
 public class PortstoneTeleportEvent extends Event implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();

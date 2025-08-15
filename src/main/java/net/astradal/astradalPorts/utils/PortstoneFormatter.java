@@ -1,5 +1,6 @@
 package net.astradal.astradalPorts.utils;
 
+import net.astradal.astradalPorts.core.PortType;
 import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.services.hooks.EconomyHook;
 import net.kyori.adventure.text.Component;
@@ -31,10 +32,16 @@ public final class PortstoneFormatter {
             : Component.text("Disabled", NamedTextColor.RED);
 
         // --- Create the Owner String ---
-        // This builds a string like "TownName (NationName)" or just "Unowned".
-        String ownerString = portstone.getTown() != null ? portstone.getTown() : "Unowned";
-        if (portstone.getNation() != null) {
-            ownerString += " (" + portstone.getNation() + ")";
+        String ownerString;
+        if (portstone.getType() == PortType.AIR && portstone.getNation() != null) {
+            ownerString = portstone.getNation() + " (Nation)";
+        } else if (portstone.getTown() != null) {
+            ownerString = portstone.getTown();
+            if (portstone.getNation() != null) {
+                ownerString += " (" + portstone.getNation() + ")";
+            }
+        } else {
+            ownerString = "Unowned";
         }
 
         // --- Assemble the final message ---
@@ -60,7 +67,6 @@ public final class PortstoneFormatter {
     public static Component formatListEntry(Portstone portstone) {
         // Use green for enabled, red for disabled
         NamedTextColor statusColor = portstone.isEnabled() ? NamedTextColor.GREEN : NamedTextColor.RED;
-        String statusText = portstone.isEnabled() ? "Enabled" : "Disabled";
 
         // Build the hover text, which shows the full info
         Component hoverText = Component.text("Click to copy ID:\n", NamedTextColor.GRAY)

@@ -120,9 +120,8 @@ public class WarmupService implements Listener {
         arrivalLocation.setPitch(player.getLocation().getPitch());
 
         // Teleport the player to the calculated safe spot
-        player.teleportAsync(arrivalLocation).thenRun(() -> {
-            player.sendMessage(Component.text("Teleported to " + destination.getDisplayName(), NamedTextColor.GREEN));
-        });
+        player.teleportAsync(arrivalLocation).thenRun(() ->
+            player.sendMessage(Component.text("Teleported to " + destination.getDisplayName(), NamedTextColor.GREEN)));
 
         // --- 4. Apply Cooldown ---
         cooldownService.applyCooldown(player, destination.getType());

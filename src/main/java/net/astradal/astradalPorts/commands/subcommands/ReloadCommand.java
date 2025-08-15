@@ -28,6 +28,7 @@ public final class ReloadCommand {
     /**
      * Executes the reload logic for the plugin.
      */
+    @SuppressWarnings("SameReturnValue")
     private static int execute(CommandContext<CommandSourceStack> ctx, AstradalPorts plugin) {
         CommandSender sender = ctx.getSource().getSender();
         sender.sendMessage(Component.text("Reloading AstradalPorts configuration...", NamedTextColor.YELLOW));

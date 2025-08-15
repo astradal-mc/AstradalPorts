@@ -2,7 +2,6 @@ package net.astradal.astradalPorts.listeners;
 
 import com.palmergames.bukkit.towny.event.DeleteTownEvent;
 import com.palmergames.bukkit.towny.event.RenameTownEvent;
-import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.core.PortstoneManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

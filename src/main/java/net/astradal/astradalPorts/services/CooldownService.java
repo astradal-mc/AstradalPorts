@@ -36,9 +36,8 @@ public class CooldownService {
         Map<String, Long> rawCooldowns = cooldownRepository.getCooldowns(playerUUID);
         Map<PortType, Long> cooldownMap = new HashMap<>();
 
-        rawCooldowns.forEach((typeString, timestamp) -> {
-            PortType.fromString(typeString).ifPresent(portType -> cooldownMap.put(portType, timestamp));
-        });
+        rawCooldowns.forEach((typeString, timestamp) ->
+            PortType.fromString(typeString).ifPresent(portType -> cooldownMap.put(portType, timestamp)));
 
         playerCooldowns.put(playerUUID, cooldownMap);
     }

@@ -26,7 +26,6 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 
@@ -42,7 +41,6 @@ public class WarmupServiceTest {
     @Mock
     private CooldownService mockCooldownService;
 
-    private TownyHook townyHook;
     private EconomyHook economyHook;
 
     private PlayerMock player;
@@ -58,7 +56,7 @@ public class WarmupServiceTest {
         // We create the fake economy hook first
         economyHook = new FakeEconomyHook(plugin.getLogger(), mockConfigService);
         // Now we can pass it into the fake towny hook
-        townyHook = new FakeTownyHook(plugin.getLogger(), economyHook);
+        TownyHook townyHook = new FakeTownyHook(plugin.getLogger(), economyHook);
 
         warmupService = new WarmupService(plugin, mockConfigService, mockCooldownService, economyHook, townyHook);
         server.getPluginManager().registerEvents(warmupService, plugin);
