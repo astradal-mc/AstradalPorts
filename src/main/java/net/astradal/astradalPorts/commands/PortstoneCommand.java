@@ -35,6 +35,7 @@ public final class PortstoneCommand {
         rootNode.then(ListCommand.build(plugin));
         rootNode.then(InfoCommand.build(plugin));
         rootNode.then(TeleportCommand.build(plugin));
+        rootNode.then(RemoveAllCommand.build(plugin));
         rootNode.then(ReloadCommand.build(plugin));
         rootNode.then(VersionCommand.build(plugin));
 
