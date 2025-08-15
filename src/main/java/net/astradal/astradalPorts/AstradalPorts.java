@@ -9,12 +9,8 @@ import net.astradal.astradalPorts.database.DatabaseManager;
 import net.astradal.astradalPorts.database.repositories.CooldownRepository;
 import net.astradal.astradalPorts.database.repositories.HologramRepository;
 import net.astradal.astradalPorts.database.repositories.PortstoneRepository;
-import net.astradal.astradalPorts.listeners.HologramListener;
-import net.astradal.astradalPorts.listeners.PlayerConnectionListener;
-import net.astradal.astradalPorts.services.ConfigService;
-import net.astradal.astradalPorts.services.CooldownService;
-import net.astradal.astradalPorts.services.HologramService;
-import net.astradal.astradalPorts.services.WarmupService;
+import net.astradal.astradalPorts.listeners.*;
+import net.astradal.astradalPorts.services.*;
 import net.astradal.astradalPorts.services.hooks.EconomyHook;
 import net.astradal.astradalPorts.services.hooks.TownyHook;
 import net.astradal.astradalPorts.utils.ConfigMigrationUtil;
@@ -26,13 +22,12 @@ import java.io.File;
 @SuppressWarnings("unused")
 public class AstradalPorts extends JavaPlugin {
 
-    // Services
+    // Services & Hooks
     private ConfigService configService;
+    private GUIService guiService;
     private CooldownService cooldownService;
     private HologramService hologramService;
     private WarmupService warmupService;
-
-    // Hooks
     private TownyHook townyHook;
     private EconomyHook economyHook;
 
@@ -53,56 +48,45 @@ public class AstradalPorts extends JavaPlugin {
         this.configService = new ConfigService(this);
 
         // --- 2. Database Setup ---
-        // Ensures the plugin data folder exists
-        if (!getDataFolder().exists()) {
-            getDataFolder().mkdirs();
-        }
+        if (!getDataFolder().exists()) getDataFolder().mkdirs();
         String dbUrl = "jdbc:sqlite:" + new File(getDataFolder(), "database.db").getAbsolutePath();
         this.databaseManager = new DatabaseManager(dbUrl, getLogger());
         this.databaseManager.connect();
-        // Run the schema to ensure all tables are created
         this.databaseManager.runSchemaFromResource("/schema.sql");
 
         // --- 3. Initialize Repositories ---
-        // These classes handle direct database communication.
         this.portstoneRepository = new PortstoneRepository(this.getLogger(), this.databaseManager);
         this.cooldownRepository = new CooldownRepository(this.getLogger(), this.databaseManager);
         this.hologramRepository = new HologramRepository(this.getLogger(), this.databaseManager);
 
-        // --- 4. Initialize Managers ---
-        // These classes handle caching and business logic.
-        this.portstoneManager = new PortstoneManager(this.portstoneRepository, townyHook);
-        // Load all data from the database into the manager's cache for fast access.
-        this.portstoneManager.loadAllPortstones();
-
-        // --- 5. Initialize Services ---
+        // --- 4. Setup Hooks ---
         setupHooks();
 
-        this.cooldownService = new CooldownService(cooldownRepository, configService);
-        this.hologramService = new HologramService(this.getLogger(), hologramRepository);
-        this.warmupService = new WarmupService(this, configService, cooldownService, economyHook, townyHook);
+        // --- 5. Initialize Managers ---
+        this.portstoneManager = new PortstoneManager(this.portstoneRepository, this.townyHook);
 
-        // --- 6. Register Commands ---
-        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            final CommandDispatcher<CommandSourceStack> dispatcher = event.registrar().getDispatcher();
-            event.registrar().register(
-                PortstoneCommand.create(this, dispatcher)
-            );
-        });
+        // --- 6. Initialize Services ---
+        this.cooldownService = new CooldownService(this.cooldownRepository, this.configService);
+        this.guiService = new GUIService(this);
+        this.hologramService = new HologramService(this.getLogger(), this.hologramRepository);
+        this.warmupService = new WarmupService(this, this.configService, this.cooldownService, this.economyHook, this.townyHook);
 
-        // --- 7. Register Event Listeners ---
-        PluginManager pm = getServer().getPluginManager();
-        pm.registerEvents(new HologramListener(hologramService), this);
-        pm.registerEvents(new PlayerConnectionListener(cooldownService), this);
-        pm.registerEvents(new HologramListener(hologramService), this);
-        pm.registerEvents(this.warmupService, this);
+        // --- 7. Load Data and Initialize Runtime Components ---
+        this.portstoneManager.loadAllPortstones();
+        this.hologramService.initializeHolograms(this.portstoneManager);
+
+        // --- 8. Register Commands & Listeners ---
+        registerCommands();
+        registerListeners();
 
         getLogger().info("AstradalPorts has been enabled successfully.");
     }
 
     @Override
     public void onDisable() {
-        // Disconnect from the database when the plugin is disabled
+        if (hologramService != null) {
+            hologramService.removeAllHolograms();
+        }
         if (databaseManager != null) {
             databaseManager.disconnect();
         }
@@ -116,8 +100,27 @@ public class AstradalPorts extends JavaPlugin {
         this.economyHook = new EconomyHook(this.getLogger(), this.configService);
         this.economyHook.initialize();
 
-        this.townyHook = new TownyHook(this.getLogger(), economyHook);
+        this.townyHook = new TownyHook(this.getLogger(), this.economyHook);
         this.townyHook.initialize();
+    }
+
+    private void registerCommands() {
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            final CommandDispatcher<CommandSourceStack> dispatcher = event.registrar().getDispatcher();
+            event.registrar().register(
+                PortstoneCommand.create(this, dispatcher)
+            );
+        });
+    }
+
+    private void registerListeners() {
+        PluginManager pm = getServer().getPluginManager();
+        pm.registerEvents(new PlayerConnectionListener(cooldownService), this);
+        pm.registerEvents(new HologramListener(hologramService), this);
+        pm.registerEvents(new PortstoneInteractionListener(this.portstoneManager, this.guiService), this);
+        pm.registerEvents(new GUIListener(this), this);
+        pm.registerEvents(this.warmupService, this);
+        pm.registerEvents(new BlockBreakListener(this.portstoneManager, this.townyHook), this);
     }
 
     // --- Public Getters for other classes to use ---
@@ -136,6 +139,10 @@ public class AstradalPorts extends JavaPlugin {
 
     public WarmupService getWarmupService() {
         return this.warmupService;
+    }
+
+    public GUIService getGuiService() {
+        return this.guiService;
     }
 
     public PortstoneManager getPortstoneManager() {
