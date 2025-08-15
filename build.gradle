@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'net.astradal'
-version = '1'
+version = '1.0.0'
 
 repositories {
     mavenCentral()
@@ -23,8 +23,24 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+
     compileOnly 'com.github.TownyAdvanced:Towny:0.101.2.1'
     compileOnly "com.github.MilkBowl:VaultAPI:1.7.1"
+    compileOnly("org.xerial:sqlite-jdbc:3.50.3.0")
+
+    //tests
+
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.72.6")
+
+    testImplementation(platform('org.junit:junit-bom:5.13.4'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher')
+
+    testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
+
+    testImplementation("org.xerial:sqlite-jdbc:3.50.3.0")
+    testImplementation 'org.slf4j:slf4j-simple:2.0.7'
+    testImplementation('com.github.TownyAdvanced:Towny:0.101.2.1')
 }
 
 tasks {
@@ -61,4 +77,12 @@ processResources {
     filesMatching('paper-plugin.yml') {
         expand props
     }
+    filesMatching('config.yml') {
+        expand props
+    }
+}
+
+test {
+    useJUnitPlatform()
+    jvmArgs '-XX:+EnableDynamicAgentLoading'
 }

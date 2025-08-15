@@ -1,125 +1,175 @@
 package net.astradal.astradalPorts;
 
+import com.mojang.brigadier.CommandDispatcher;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import net.astradal.astradalPorts.commands.RootCommand;
-import net.astradal.astradalPorts.events.PortstoneRenameEvent;
-import net.astradal.astradalPorts.helpers.IdSuggestions;
-import net.astradal.astradalPorts.helpers.PortstoneCleanupHelper;
+import net.astradal.astradalPorts.commands.PortstoneCommand;
+import net.astradal.astradalPorts.core.PortstoneManager;
+import net.astradal.astradalPorts.database.DatabaseManager;
+import net.astradal.astradalPorts.database.repositories.CooldownRepository;
+import net.astradal.astradalPorts.database.repositories.HologramRepository;
+import net.astradal.astradalPorts.database.repositories.PortstoneRepository;
 import net.astradal.astradalPorts.listeners.*;
-import net.astradal.astradalPorts.listeners.towny.NationDeleteListener;
-import net.astradal.astradalPorts.listeners.towny.TownDeleteListener;
-import net.astradal.astradalPorts.listeners.towny.TownLeaveNationListener;
-import net.astradal.astradalPorts.services.CooldownService;
-import net.astradal.astradalPorts.services.HologramService;
-import net.astradal.astradalPorts.services.PortstoneStorage;
-import net.astradal.astradalPorts.util.PortstoneKeys;
-import net.milkbowl.vault.economy.Economy;
-import org.bukkit.configuration.ConfigurationSection;
+import net.astradal.astradalPorts.services.*;
+import net.astradal.astradalPorts.services.hooks.EconomyHook;
+import net.astradal.astradalPorts.services.hooks.TownyHook;
+import net.astradal.astradalPorts.utils.ConfigMigrationUtil;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
 
-public final class AstradalPorts extends JavaPlugin {
+@SuppressWarnings("unused")
+public class AstradalPorts extends JavaPlugin {
 
-    private PortstoneStorage portstoneStorage;
-    private HologramService hologramService;
+    // Services & Hooks
+    private ConfigService configService;
+    private GUIService guiService;
     private CooldownService cooldownService;
-    private Economy economy;
+    private HologramService hologramService;
+    private WarmupService warmupService;
+    private TownyHook townyHook;
+    private EconomyHook economyHook;
+
+    // Database Components
+    private DatabaseManager databaseManager;
+    private PortstoneRepository portstoneRepository;
+    private CooldownRepository cooldownRepository;
+    private HologramRepository hologramRepository;
+
+    // Core Managers
+    private PortstoneManager portstoneManager;
 
     @Override
     public void onEnable() {
+        // --- 1. Configuration ---
         saveDefaultConfig();
+        ConfigMigrationUtil.migrateConfigDefaults(this);
+        this.configService = new ConfigService(this);
 
-        // Initialize services
-        this.portstoneStorage = new PortstoneStorage(this);
-        this.hologramService = new HologramService(this);
-        PortstoneKeys.init(this);
-        PortstoneCleanupHelper cleanup = new PortstoneCleanupHelper(portstoneStorage, hologramService);
+        // --- 2. Database Setup ---
+        if (!getDataFolder().exists()) getDataFolder().mkdirs();
+        String dbUrl = "jdbc:sqlite:" + new File(getDataFolder(), "database.db").getAbsolutePath();
+        this.databaseManager = new DatabaseManager(dbUrl, getLogger());
+        this.databaseManager.connect();
+        this.databaseManager.runSchemaFromResource("/schema.sql");
 
-        // Load cooldowns from config
-        Map<String, Integer> cooldownMap = new HashMap<>();
-        ConfigurationSection cooldownSection = getConfig().getConfigurationSection("cooldowns");
-        if (cooldownSection != null) {
-            for (String type : cooldownSection.getKeys(false)) {
-                cooldownMap.put(type.toLowerCase(), cooldownSection.getInt(type));
-            }
-        }
-        this.cooldownService = new CooldownService(this, cooldownMap);
+        // --- 3. Initialize Repositories ---
+        this.portstoneRepository = new PortstoneRepository(this.getLogger(), this.databaseManager);
+        this.cooldownRepository = new CooldownRepository(this.getLogger(), this.databaseManager);
+        this.hologramRepository = new HologramRepository(this.getLogger(), this.databaseManager);
 
-        if (!setupEconomy()) {
-            getLogger().severe("Vault not found or no economy plugin installed!");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
+        // --- 4. Setup Hooks ---
+        setupHooks();
 
-        // Register plugin listeners
-        PluginManager pm = getServer().getPluginManager();
+        // --- 5. Initialize Managers ---
+        this.portstoneManager = new PortstoneManager(this.portstoneRepository, this.townyHook);
 
-        // Portstone is broken
-        pm.registerEvents(new PortstoneBreakListener(portstoneStorage, hologramService), this);
-        // Portstone is clicked
-        pm.registerEvents(new PortstoneClickListener(this, portstoneStorage, cooldownService), this);
-        // Gui elements are clicked
-        pm.registerEvents(new PortstoneGUIListener(this, cooldownService), this);
-        // Cooldown event fires
-        pm.registerEvents(new CooldownExpireListener(cooldownService), this);
-        // Portstone rename event
-        pm.registerEvents(new PortstoneRenameListener(hologramService), this);
+        // --- 6. Initialize Services ---
+        this.cooldownService = new CooldownService(this.cooldownRepository, this.configService);
+        this.guiService = new GUIService(this, economyHook);
+        this.hologramService = new HologramService(this.getLogger(), this.hologramRepository);
+        this.warmupService = new WarmupService(this, this.configService, this.cooldownService, this.economyHook, this.townyHook);
 
-        // Town is deleted
-        pm.registerEvents(new TownDeleteListener(cleanup), this);
-        // Nation is deleted (airship ports)
-        pm.registerEvents(new NationDeleteListener(cleanup), this);
-        // Town leaves nation (airship ports)
-        pm.registerEvents(new TownLeaveNationListener(cleanup), this);
+        // --- 7. Load Data and Initialize Runtime Components ---
+        this.portstoneManager.loadAllPortstones();
+        this.hologramService.initializeHolograms(this.portstoneManager);
 
-        // Register commands
-        IdSuggestions.setStorage(portstoneStorage);
-        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            var registrar = event.registrar();
-            var dispatcher = registrar.getDispatcher();
+        // --- 8. Register Commands & Listeners ---
+        registerCommands();
+        registerListeners();
 
-            registrar.register(
-                RootCommand.create(this, portstoneStorage, cooldownService, hologramService, dispatcher)
-            );
-        });
+        getLogger().info("AstradalPorts has been enabled successfully.");
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
-        cooldownService.save();
+        if (hologramService != null) {
+            hologramService.removeAllHolograms();
+        }
+        if (databaseManager != null) {
+            databaseManager.disconnect();
+        }
+        getLogger().info("AstradalPorts has been disabled.");
     }
 
-    private boolean setupEconomy() {
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) return false;
+    /**
+     * Initializes and enables integration hooks with other plugins.
+     */
+    private void setupHooks() {
+        this.economyHook = new EconomyHook(this.getLogger(), this.configService);
+        this.economyHook.initialize();
 
-        this.economy = rsp.getProvider();
-        return true;
+        this.townyHook = new TownyHook(this.getLogger(), this.economyHook);
+        this.townyHook.initialize();
     }
 
-    public HologramService getHologramService() {
-        return this.hologramService;
+    private void registerCommands() {
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            final CommandDispatcher<CommandSourceStack> dispatcher = event.registrar().getDispatcher();
+            event.registrar().register(
+                PortstoneCommand.create(this, dispatcher)
+            );
+        });
     }
 
-    public PortstoneStorage getPortstoneStorage() {
-        return this.portstoneStorage;
+    private void registerListeners() {
+        PluginManager pm = getServer().getPluginManager();
+        pm.registerEvents(new PlayerConnectionListener(cooldownService), this);
+        pm.registerEvents(new HologramListener(hologramService), this);
+        pm.registerEvents(new PortstoneInteractionListener(this.portstoneManager, this.guiService), this);
+        pm.registerEvents(new GUIListener(this), this);
+        pm.registerEvents(this.warmupService, this);
+        pm.registerEvents(new BlockBreakListener(this.portstoneManager, this.townyHook), this);
+
+        if (this.townyHook.isEnabled()) {
+            pm.registerEvents(new TownyListener(this.portstoneManager, this.getLogger()), this);
+        }
+    }
+
+    // --- Public Getters for other classes to use ---
+
+    public ConfigService getConfigService() {
+        return configService;
     }
 
     public CooldownService getCooldownService() {
         return this.cooldownService;
     }
 
-    public Economy getEconomy() {
-        return economy;
+    public HologramService getHologramService() {
+        return this.hologramService;
     }
 
-    public int getLandPortstoneRangeLimit() {
-        return getConfig().getInt("limits.land-portstone-range", 500);
+    public WarmupService getWarmupService() {
+        return this.warmupService;
     }
 
+    public GUIService getGuiService() {
+        return this.guiService;
+    }
+
+    public PortstoneManager getPortstoneManager() {
+        return portstoneManager;
+    }
+
+    public PortstoneRepository getPortstoneRepository() {
+        return portstoneRepository;
+    }
+
+    public CooldownRepository getCooldownRepository() {
+        return cooldownRepository;
+    }
+
+    public HologramRepository getHologramRepository() {
+        return hologramRepository;
+    }
+
+    public EconomyHook getEconomyHook() {
+        return economyHook;
+    }
+
+    public TownyHook getTownyHook() {
+        return townyHook;
+    }
 }

@@ -1,12 +1,22 @@
-cooldowns:
-  air: 3600  # seconds
-  land: 600
-  sea: 1800
+plugin-version: ${version}
 
-warmups:
-  air: 6    # seconds
-  land: 3
-  sea: 4
+portstones:
+  air:
+    cooldown: 600 # in seconds
+    warmup: 5 # in seconds
+    range: -1 # -1 to disable
+  sea:
+    cooldown: 1200 # in seconds
+    warmup: 5 # in seconds
+    range: -1 # -1 to disable
+  land:
+    cooldown: 1200 # in seconds
+    warmup: 5 # in seconds
+    range: 1000 # -1 to disable
 
-limits:
-  land-portstone-range: 500  # distance in blocks
+economy:
+  enabled: true
+  requireBalance: true
+
+gui:
+  titleColor: black

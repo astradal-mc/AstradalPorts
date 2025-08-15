@@ -1,151 +1,145 @@
 package net.astradal.astradalPorts.services;
 
-
-import net.astradal.astradalPorts.AstradalPorts;
+import net.astradal.astradalPorts.core.Portstone;
+import net.astradal.astradalPorts.core.PortstoneManager;
+import net.astradal.astradalPorts.database.repositories.HologramRepository;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.TextDisplay;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+import java.util.Map;
 
+/**
+ * Manages the TextDisplay entities used as holograms above portstones.
+ */
 public class HologramService {
 
-    private final AstradalPorts plugin;
-    private final File file;
-    private final YamlConfiguration config;
-    private final Map<UUID, UUID> portstoneToHologram = new HashMap<>();
+    private final Logger logger;
+    private final HologramRepository hologramRepository;
+    private final Map<UUID, UUID> hologramCache = new ConcurrentHashMap<>(); // Portstone ID -> Hologram Entity ID
 
-    public HologramService(AstradalPorts plugin) {
-        this.file = new File(plugin.getDataFolder(), "holograms.yml");
-        this.config = YamlConfiguration.loadConfiguration(file);
-        this.plugin = plugin;
-        load();
+    public HologramService(Logger logger, HologramRepository hologramRepository) {
+        this.logger = logger;
+        this.hologramRepository = hologramRepository;
     }
 
-    public void showHologram(Location baseLocation, Component text, UUID portstoneId) {
-        Location loc = baseLocation.clone().add(0.5, 1.5, 0.5);
-        World world = loc.getWorld();
-        if (world == null) return;
+    /**
+     * Iterates through all known portstones and ensures their holograms are active and correct.
+     * Should be called on plugin startup.
+     */
+    public void initializeHolograms(PortstoneManager portstoneManager) {
+        logger.info("Validating and creating holograms for all portstones...");
 
-        // Don't respawn if one already exists in memory
-        if (portstoneToHologram.containsKey(portstoneId)) {
-            UUID hologramId = portstoneToHologram.get(portstoneId);
-            boolean entityExists = Bukkit.getWorlds().stream()
-                .map(w -> w.getEntity(hologramId))
-                .anyMatch(e -> e instanceof TextDisplay);
-
-            if (entityExists) return;
-
-            // If entity is missing, remove stale reference
-            portstoneToHologram.remove(portstoneId);
-            config.set(portstoneId.toString(), null);
+        // Ensure every existing portstone has a valid, living hologram entity.
+        for (Portstone portstone : portstoneManager.getAllPortstones()) {
+            createOrUpdateHologram(portstone);
         }
 
-        // Check for existing holograms at the location
-        List<Entity> existing = world.getNearbyEntities(loc, 0.5, 0.5, 0.5).stream()
-            .filter(e -> e instanceof TextDisplay)
-            .toList();
-
-        if (!existing.isEmpty()) {
-            UUID entityId = existing.getFirst().getUniqueId();
-            portstoneToHologram.put(portstoneId, entityId);
-            config.set(portstoneId.toString(), entityId.toString());
-            saveFile();
-            return;
-        }
-
-
-        TextDisplay display = world.spawn(loc, TextDisplay.class, entity -> {
-            entity.text(text);
-            entity.setBillboard(Display.Billboard.VERTICAL);
-            entity.setSeeThrough(false);
-            entity.setDefaultBackground(true);
-            entity.setShadowed(true);
-            entity.setBackgroundColor(Color.fromARGB(0, 0, 0, 0)); // fully transparent
-            entity.setPersistent(true);
-        });
-
-        portstoneToHologram.put(portstoneId, display.getUniqueId());
-        config.set(portstoneId.toString(), display.getUniqueId().toString());
-        saveFile();
+        logger.info("Hologram initialization complete.");
     }
 
-    public void removeHologram(UUID portstoneId) {
-        UUID hologramId = portstoneToHologram.remove(portstoneId);
-        config.set(portstoneId.toString(), null);
-        saveFile();
-
-        if (hologramId == null) return;
-
-        for (World world : Bukkit.getWorlds()) {
-            Entity entity = world.getEntity(hologramId);
-            if (entity == null) {
-                plugin.getLogger().warning("Failed to find hologram entity with ID " + hologramId);
-                return;
-            }
-            if (entity instanceof TextDisplay) {
+    /**
+     * Removes all managed hologram entities from the world.
+     * Should be called on plugin shutdown.
+     */
+    public void removeAllHolograms() {
+        hologramCache.values().forEach(entityId -> {
+            Entity entity = Bukkit.getEntity(entityId);
+            if (entity != null) {
                 entity.remove();
-                break;
+            }
+        });
+        hologramCache.clear();
+    }
+
+    /**
+     * Creates a new hologram for a portstone, or updates it if one already exists.
+     * @param portstone The portstone to create/update a hologram for.
+     */
+    public void createOrUpdateHologram(Portstone portstone) {
+        UUID portstoneId = portstone.getId();
+        UUID hologramId = hologramCache.get(portstoneId);
+        Entity hologramEntity = (hologramId != null) ? Bukkit.getEntity(hologramId) : null;
+
+        TextDisplay textDisplay;
+
+        if (hologramEntity instanceof TextDisplay) {
+            // This is the path for UPDATING an existing hologram.
+            textDisplay = (TextDisplay) hologramEntity;
+            textDisplay.teleport(getHologramLocation(portstone.getLocation()));
+            textDisplay.text(generateHologramText(portstone)); // Update the text here.
+        } else {
+            // This is the path for CREATING a new hologram.
+            removeHologram(portstoneId); // Clean up any stale DB/cache entries
+            textDisplay = spawnHologram(portstone); // spawnHologram sets the initial text.
+            hologramCache.put(portstoneId, textDisplay.getUniqueId());
+            hologramRepository.saveHologram(portstoneId.toString(), textDisplay.getUniqueId());
+        }
+    }
+
+    /**
+     * Removes the hologram associated with a given portstone.
+     * @param portstoneId The UUID of the portstone.
+     */
+    public void removeHologram(UUID portstoneId) {
+        UUID hologramId = hologramCache.remove(portstoneId);
+        hologramRepository.deleteHologram(portstoneId.toString());
+
+        if (hologramId != null) {
+            Entity entity = Bukkit.getEntity(hologramId);
+            if (entity != null) {
+                entity.remove();
             }
         }
     }
 
-    public void validateLoadedHolograms() {
-        Iterator<Map.Entry<UUID, UUID>> iter = portstoneToHologram.entrySet().iterator();
-        while (iter.hasNext()) {
-            var entry = iter.next();
-            UUID hologramId = entry.getValue();
-            boolean found = Bukkit.getWorlds().stream()
-                .map(w -> w.getEntity(hologramId))
-                .anyMatch(e -> e instanceof TextDisplay);
-            if (!found) {
-                plugin.getLogger().warning("Missing hologram entity for portstone ID: " + entry.getKey());
-                iter.remove();
-                config.set(entry.getKey().toString(), null);
-            }
+    private TextDisplay spawnHologram(Portstone portstone) {
+        Location location = getHologramLocation(portstone.getLocation());
+        World world = location.getWorld();
+        if (world == null) {
+            throw new IllegalStateException("Cannot spawn hologram in a null world for portstone " + portstone.getId());
         }
-        saveFile();
+
+        return world.spawn(getHologramLocation(portstone.getLocation()), TextDisplay.class, entity -> {
+            entity.text(generateHologramText(portstone));
+            entity.setBillboard(Display.Billboard.CENTER);
+            entity.setSeeThrough(false);
+            entity.setDefaultBackground(false);
+            entity.setBackgroundColor(Color.fromARGB(0, 0, 0, 0)); // Transparent
+            entity.setShadowed(true);
+            entity.setPersistent(true); // Make sure the hologram saves with the world
+        });
     }
 
-    public void load() {
-        if (!file.exists()) return;
-
-        for (String key : config.getKeys(false)) {
-            String value = config.getString(key);
-            if (value == null) {
-                plugin.getLogger().warning("Skipping hologram entry: no value for portstone ID " + key);
-                continue;
-            }
-
-            try {
-                UUID portstoneId = UUID.fromString(key);
-                UUID hologramId = UUID.fromString(value);
-                portstoneToHologram.put(portstoneId, hologramId);
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Invalid UUID in holograms.yml: " + key + " → " + value);
-            }
-        }
+    private Location getHologramLocation(Location portstoneLocation) {
+        // Center the hologram on the block and raise it
+        return portstoneLocation.clone().add(0.5, 1.5, 0.5);
     }
 
-    private void saveFile() {
-        try {
-            config.save(file);
-        } catch (IOException e) {
-           plugin.getLogger().severe("Failed to save holograms.yml: " + e.getMessage());
-        }
-    }
+    private Component generateHologramText(Portstone portstone) {
+        // Line 1: The Portstone's display name, always shown.
+        Component displayName = Component.text(portstone.getDisplayName(), NamedTextColor.AQUA);
 
-    public void reload() {
-        this.portstoneToHologram.clear();
-        this.load();
+        // Line 2: Always starts with the type.
+        Component secondLine = Component.text("[" + portstone.getType().name() + "]", NamedTextColor.GRAY);
+
+        // Conditionally add the "Disabled" status only if the portstone is not enabled.
+        if (!portstone.isEnabled()) {
+            secondLine = secondLine
+                .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
+                .append(Component.text("Disabled", NamedTextColor.RED));
+        }
+
+        // Combine the two lines.
+        return displayName.append(Component.newline()).append(secondLine);
     }
 }
-
