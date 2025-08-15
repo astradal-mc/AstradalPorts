@@ -67,7 +67,7 @@ public final class PortstoneFormatter {
             .append(Component.text(portstone.getDisplayName(), NamedTextColor.YELLOW))
             .append(Component.text(" [" + portstone.getType().name() + "]", NamedTextColor.DARK_GRAY))
             .hoverEvent(hoverText)
-            .clickEvent(ClickEvent.copyToClipboard(portstone.getDisplayName()))
+            .clickEvent(ClickEvent.copyToClipboard(portstone.getId().toString()))
             .build();
     }
 
