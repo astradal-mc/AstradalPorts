@@ -50,8 +50,12 @@ public class GUIService {
                 int range = config.getRange(p.getType().name());
                 return range == -1 || p.getLocation().distanceSquared(sourcePortstone.getLocation()) <= range * range;
             })
-            // Rule: Not in a hostile town (placeholder for Towny hook logic)
-            // .filter(p -> !plugin.getTownyHook().isHostile(sourcePortstone.getTown(), p.getTown()))
+            // Rule: Not in a hostile town
+            .filter(p -> !plugin.getTownyHook().isHostile(sourcePortstone.getTown(), p.getTown()))
+            // Rule: Not in another world if disabled
+            .filter(p -> config.isCrossWorldTravelAllowed() || p.getWorld().equals(sourcePortstone.getWorld()))
+            // Rule: Not in disabled world, if cross world portstones is enabled
+            .filter(p -> !config.isWorldDisabled(p.getWorld()))
             .toList();
 
         if (availableDestinations.isEmpty()) {

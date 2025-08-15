@@ -22,35 +22,26 @@ public class GUIListener implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getInventory().getHolder() instanceof PortstoneGUIHolder)) return;
-
-        event.setCancelled(true); // Prevent players from taking items out of the GUI
+        event.setCancelled(true);
 
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null || clickedItem.getType().isAir()) return;
 
         Player player = (Player) event.getWhoClicked();
+        player.closeInventory();
 
-        // Find the source portstone (the one they are near)
         Portstone source = plugin.getPortstoneManager()
             .findNearestPortstone(player.getLocation(), 5.0)
             .orElse(null);
 
-        if (source == null) {
-            player.closeInventory();
-            // You might want to send an error message here
-            return;
-        }
-
-        // Get the destination UUID from the item's metadata
         String destUuidString = clickedItem.getItemMeta().getPersistentDataContainer()
             .get(plugin.getGuiService().destinationUuidKey, PersistentDataType.STRING);
 
-        if (destUuidString != null) {
-            player.closeInventory();
+        if (source != null && destUuidString != null) {
             Portstone destination = plugin.getPortstoneManager().getPortstoneById(UUID.fromString(destUuidString));
             if (destination != null) {
-                // We have a source and destination, start the warmup!
-                plugin.getWarmupService().startWarmup(player, source, destination);
+                // Delegate everything to the WarmupService
+                plugin.getWarmupService().requestTeleport(player, source, destination);
             }
         }
     }

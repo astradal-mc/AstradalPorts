@@ -2,6 +2,7 @@ package net.astradal.astradalPorts.services;
 
 import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.commands.PortstonePermissions;
+import net.astradal.astradalPorts.core.PortType;
 import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.events.PortstoneTeleportEvent;
 import net.kyori.adventure.text.Component;
@@ -127,6 +128,56 @@ public class WarmupService implements Listener {
         cooldownService.applyCooldown(player, destination.getType());
     }
 
+    /**
+     * The main entry point for initiating a teleport.
+     * This method performs all necessary validation checks before starting a warmup.
+     *
+     * @param player      The player requesting to teleport.
+     * @param source      The portstone the player is at.
+     * @param destination The portstone the player wants to go to.
+     */
+    public void requestTeleport(Player player, Portstone source, Portstone destination) {
+        // --- Perform all validation checks ---
+        if (source.getId().equals(destination.getId())) {
+            player.sendMessage(Component.text("You are already at this portstone.", NamedTextColor.RED));
+            return;
+        }
+
+        if (source.getType() != destination.getType()) {
+            player.sendMessage(Component.text("You can only travel between portstones of the same type.", NamedTextColor.RED));
+            return;
+        }
+
+        if (source.getType() == PortType.SEA && player.getWorld().hasStorm()) {
+            player.sendMessage(Component.text("The seas are too rough! You cannot use sea ports during a storm.", NamedTextColor.RED));
+            return;
+        }
+
+        if (!destination.isEnabled() && !PortstonePermissions.canBypass(player, "disabled")) {
+            player.sendMessage(Component.text("That portstone is currently disabled.", NamedTextColor.RED));
+            return;
+        }
+
+        if (!PortstonePermissions.canBypass(player, "cooldown") && cooldownService.isOnCooldown(player, destination.getType())) {
+            long remaining = cooldownService.getRemainingSeconds(player, destination.getType());
+            player.sendMessage(Component.text("You are on cooldown for this port type. Time remaining: " + remaining + "s", NamedTextColor.RED));
+            return;
+        }
+
+        if (configService.isWorldDisabled(source.getWorld()) || configService.isWorldDisabled(destination.getWorld())) {
+            player.sendMessage(Component.text("Portstones are disabled in one of these worlds.", NamedTextColor.RED));
+            return;
+        }
+
+        if (!configService.isCrossWorldTravelAllowed() && !source.getWorld().equals(destination.getWorld())) {
+            player.sendMessage(Component.text("Cross-world travel is not enabled.", NamedTextColor.RED));
+            return;
+        }
+
+        // --- If all checks pass, start the warmup ---
+        this.startWarmup(player, source, destination);
+    }
+
     // --- Event Handlers for the Service ---
 
     @EventHandler
@@ -149,4 +200,5 @@ public class WarmupService implements Listener {
             cancelWarmup(event.getPlayer(), "", false); // No message needed, they're offline
         }
     }
+
 }

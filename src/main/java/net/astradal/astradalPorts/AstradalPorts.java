@@ -1,7 +1,10 @@
 package net.astradal.astradalPorts;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.astradal.astradalPorts.commands.PortstoneCommand;
 import net.astradal.astradalPorts.core.PortstoneManager;
@@ -106,10 +109,23 @@ public class AstradalPorts extends JavaPlugin {
 
     private void registerCommands() {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            final CommandDispatcher<CommandSourceStack> dispatcher = event.registrar().getDispatcher();
-            event.registrar().register(
-                PortstoneCommand.create(this, dispatcher)
-            );
+            final var registrar = event.registrar();
+            final var dispatcher = registrar.getDispatcher();
+
+            // 1. Get the builder for your main command.
+            LiteralArgumentBuilder<CommandSourceStack> portstoneBuilder = PortstoneCommand.create(this, dispatcher);
+
+            // 2. Build the main command node. We need this for the alias to redirect to.
+            LiteralCommandNode<CommandSourceStack> portstoneNode = portstoneBuilder.build();
+
+            // 3. Register the main command node. The registrar takes the final node.
+            registrar.register(portstoneNode, "Manage Portstones");
+
+            // 4. Create the alias node that redirects to the main node, and register it.
+            LiteralCommandNode<CommandSourceStack> aliasNode = Commands.literal("ps")
+                .redirect(portstoneNode)
+                .build();
+            registrar.register(aliasNode, "Alias for /portstone");
         });
     }
 
@@ -123,7 +139,7 @@ public class AstradalPorts extends JavaPlugin {
         pm.registerEvents(new BlockBreakListener(this.portstoneManager, this.townyHook), this);
 
         if (this.townyHook.isEnabled()) {
-            pm.registerEvents(new TownyListener(this.portstoneManager, this.getLogger()), this);
+            pm.registerEvents(new TownyListener(this.portstoneManager, this), this);
         }
     }
 
@@ -172,4 +188,12 @@ public class AstradalPorts extends JavaPlugin {
     public TownyHook getTownyHook() {
         return townyHook;
     }
+
+    // These methods are primarily for testing purposes
+    public void setTownyHook(TownyHook townyHook) { this.townyHook = townyHook; }
+
+    public void setPortstoneManager(PortstoneManager portstoneManager) { this.portstoneManager = portstoneManager; }
+
+    public void setEconomyHook(EconomyHook economyHook) { this.economyHook = economyHook; }
 }
+

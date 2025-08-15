@@ -1,7 +1,7 @@
 package net.astradal.astradalPorts.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.astradal.astradalPorts.AstradalPorts;
@@ -20,7 +20,7 @@ public final class PortstoneCommand {
      * @return The fully constructed command node, ready to be registered with Paper's
      * command system.
      */
-    public static LiteralCommandNode<CommandSourceStack> create(
+    public static LiteralArgumentBuilder<CommandSourceStack> create(
         AstradalPorts plugin,
         CommandDispatcher<CommandSourceStack> dispatcher
     ) {
@@ -39,6 +39,6 @@ public final class PortstoneCommand {
         rootNode.then(ReloadCommand.build(plugin));
         rootNode.then(VersionCommand.build(plugin));
 
-        return rootNode.build();
+        return rootNode;
     }
 }

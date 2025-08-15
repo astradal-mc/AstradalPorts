@@ -145,6 +145,45 @@ public class TownyHook {
         }
     }
 
+    /**
+     * Checks if a destination town is considered hostile to a source town.
+     * Hostility is defined as being in different nations that are not allied.
+     *
+     * @param sourceTownName The name of the town the player is in.
+     * @param destTownName   The name of the destination town.
+     * @return true if the towns are hostile, false otherwise.
+     */
+    public boolean isHostile(String sourceTownName, String destTownName) {
+        // A portstone is not hostile to itself or if Towny integration is off.
+        if (!enabled || sourceTownName == null || destTownName == null || sourceTownName.equalsIgnoreCase(destTownName)) {
+            return false;
+        }
+
+        Town sourceTown = townyAPI.getTown(sourceTownName);
+        Town destTown = townyAPI.getTown(destTownName);
+
+        // If either town doesn't exist, they can't be hostile.
+        if (sourceTown == null || destTown == null) {
+            return false;
+        }
+
+        Nation sourceNation = sourceTown.getNationOrNull();
+        Nation destNation = destTown.getNationOrNull();
+
+        // If either town is not in a nation, they are considered neutral.
+        if (sourceNation == null || destNation == null) {
+            return false;
+        }
+
+        // Not hostile if they are in the same nation or their nations are allied.
+        if (sourceNation.equals(destNation) || sourceNation.hasAlly(destNation)) {
+            return false;
+        }
+
+        // If they are in different, non-allied nations, they are considered hostile.
+        return true;
+    }
+
     public void depositToTownBank(String townName, double amount) {
         if (!enabled || amount <= 0) return;
 

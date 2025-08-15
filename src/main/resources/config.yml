@@ -1,22 +1,64 @@
 plugin-version: ${version}
 
+# --- General Travel Rules ---
+teleport-rules:
+  allow-cross-world-travel: false
+  disabled-worlds:
+    - "world_the_end"
+    - "world_nether"
+    - "resource_world"
+
+# --- Portstone Type Settings ---
 portstones:
   air:
-    cooldown: 600 # in seconds
-    warmup: 5 # in seconds
-    range: -1 # -1 to disable
+    cooldown: 600
+    warmup: 5
+    range: -1
   sea:
-    cooldown: 1200 # in seconds
-    warmup: 5 # in seconds
-    range: -1 # -1 to disable
+    cooldown: 1200
+    warmup: 5
+    range: -1
   land:
-    cooldown: 1200 # in seconds
-    warmup: 5 # in seconds
-    range: 1000 # -1 to disable
+    cooldown: 1200
+    warmup: 5
+    range: 1000
 
+# --- Economy Settings ---
 economy:
   enabled: true
   requireBalance: true
 
+# --- GUI Settings ---
 gui:
-  titleColor: black
+  title-color: "black"
+  fill-item: 'GRAY_STAINED_GLASS_PANE'
+  special-items:
+    town-spawn:
+      enabled: true
+      slot: 4
+      item: 'COMPASS'
+      name: '<gold><b>Home Sweet Home</b></gold>'
+      lore:
+        - '<gray>Click to teleport to your</gray>'
+        - '<gray>town''s spawn point.</gray>'
+
+# --- Effects Settings ---
+effects:
+  warmup:
+    particle: ENCHANT
+    count: 10
+  sounds:
+    warmup-start: 'BLOCK_BEACON_ACTIVATE'
+    teleport-success: 'ENTITY_ENDERMAN_TELEPORT'
+    teleport-cancel: 'BLOCK_REDSTONE_TORCH_BURNOUT'
+
+# --- Message Settings ---
+messages:
+  teleport-success: '<green>Teleported to <aqua>{destination_name}</aqua>!</green>'
+  teleport-warmup: '<yellow>Teleporting in {seconds} seconds. Don''t move!</yellow>'
+  teleport-cancelled-move: '<red>Teleport cancelled. You moved.</red>'
+  error-on-cooldown: '<red>You are on cooldown for this port type. Time remaining: {time}s</red>'
+  error-no-permission: '<red>You do not have permission to do that.</red>'
+  error-cant-afford: '<red>You can''t afford the {fee} travel fee!</red>'
+  error-portstone-disabled: '<red>That portstone is currently disabled.</red>'
+  error-stormy-seas: '<red>The seas are too rough! You cannot use sea ports during a storm.</red>'

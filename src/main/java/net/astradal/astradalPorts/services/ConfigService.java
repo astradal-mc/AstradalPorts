@@ -3,8 +3,8 @@ package net.astradal.astradalPorts.services;
 import net.astradal.astradalPorts.AstradalPorts;
 import org.bukkit.configuration.ConfigurationSection;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service for accessing typed configuration values from config.yml.
@@ -23,6 +23,10 @@ public class ConfigService {
     private boolean economyEnabled = true;
     private boolean economyRequireBalance = true;
     private String guiTitleColor = "black";
+
+    // --- Cached Teleport Rules ---
+    private boolean allowCrossWorldTravel = false;
+    private Set<String> disabledWorlds = new HashSet<>();
 
     public ConfigService(AstradalPorts plugin) {
         this.plugin = plugin;
@@ -54,7 +58,12 @@ public class ConfigService {
             }
         }
 
-        // --- Economy and GUI settings remain the same ---
+        // --- Load Teleport Rules ---
+        this.allowCrossWorldTravel = config.getBoolean("teleport-rules.allow-cross-world-travel", false);
+        List<String> worldsList = config.getStringList("teleport-rules.disabled-worlds");
+        this.disabledWorlds = worldsList.stream().map(String::toLowerCase).collect(Collectors.toSet());
+
+        // --- Load Economy and GUI settings ---
         economyEnabled = config.getBoolean("economy.enabled", true);
         economyRequireBalance = config.getBoolean("economy.requireBalance", true);
         guiTitleColor = config.getString("gui.titleColor", "black");
@@ -115,5 +124,22 @@ public class ConfigService {
      */
     public String getGuiTitleColor() {
         return guiTitleColor;
+    }
+
+    /**
+     * Checks if teleporting between different worlds is allowed.
+     * @return true if cross-world travel is enabled.
+     */
+    public boolean isCrossWorldTravelAllowed() {
+        return allowCrossWorldTravel;
+    }
+
+    /**
+     * Checks if Portstones are disabled in a specific world.
+     * @param worldName The name of the world to check.
+     * @return true if the world is on the disabled list.
+     */
+    public boolean isWorldDisabled(String worldName) {
+        return disabledWorlds.contains(worldName.toLowerCase());
     }
 }
