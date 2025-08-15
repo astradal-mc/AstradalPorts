@@ -2,6 +2,7 @@ package net.astradal.astradalPorts.core;
 
 import net.astradal.astradalPorts.database.repositories.PortstoneRepository;
 import net.astradal.astradalPorts.events.PortstoneCreateEvent;
+import net.astradal.astradalPorts.events.PortstoneRemoveEvent;
 import net.astradal.astradalPorts.services.hooks.TownyHook;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -144,17 +145,59 @@ public class PortstoneManager {
         portstoneCacheByLocation.put(portstone.getLocation(), portstone);
     }
 
+    // Define a custom exception for removal failures
+    public static class PortstoneRemovalException extends Exception {
+        public PortstoneRemovalException(String message) { super(message); }
+    }
+
     /**
-     * Removes a portstone from the cache and the database.
-     *
+     * Removes the portstone a player is looking at, after performing permission checks.
+     * @param player The player attempting to remove the portstone.
+     * @throws PortstoneRemovalException if the player is not looking at a portstone or lacks permission.
+     */
+    public void removePortstone(Player player) throws PortstoneRemovalException {
+        Block target = player.getTargetBlockExact(5);
+        if (target == null) {
+            throw new PortstoneRemovalException("You are not looking at a portstone.");
+        }
+
+        Portstone portstone = getPortstoneAt(target.getLocation());
+        if (portstone == null) {
+            throw new PortstoneRemovalException("No portstone is registered at this location.");
+        }
+
+        // Perform the ownership check using the TownyHook
+        if (!townyHook.canEdit(player, portstone)) {
+            throw new PortstoneRemovalException("You do not have permission to remove this portstone.");
+        }
+
+        // Call the internal removal method
+        removePortstone(portstone);
+    }
+
+    /**
+     * Removes a portstone by its ID without permission checks (for admins).
+     * @param portstoneId The UUID of the portstone to remove.
+     * @throws PortstoneRemovalException if no portstone with that ID is found.
+     */
+    public void removePortstone(UUID portstoneId) throws PortstoneRemovalException {
+        Portstone portstone = getPortstoneById(portstoneId);
+        if (portstone == null) {
+            throw new PortstoneRemovalException("No portstone found with the ID: " + portstoneId);
+        }
+        removePortstone(portstone);
+    }
+
+    /**
+     * The core internal method for removing a portstone from the cache and database.
      * @param portstone The portstone to remove.
      */
     public void removePortstone(Portstone portstone) {
-        // Remove from the live caches
+        // Fire the event BEFORE deleting, so listeners can react.
+        Bukkit.getPluginManager().callEvent(new PortstoneRemoveEvent(portstone));
+
         portstoneCacheById.remove(portstone.getId());
         portstoneCacheByLocation.remove(portstone.getLocation());
-
-        // Remove from the database
         portstoneRepository.deletePortstone(portstone.getIdAsString());
     }
 
@@ -164,11 +207,54 @@ public class PortstoneManager {
         return portstoneCacheById.get(id);
     }
 
+    /**
+     * Finds a portstone by its case-insensitive display name.
+     *
+     * @param name The name to search for.
+     * @return An Optional containing the found Portstone, or empty if no match.
+     */
+    public Optional<Portstone> getPortstoneByName(String name) {
+        return portstoneCacheById.values().stream()
+            .filter(p -> p.getDisplayName().equalsIgnoreCase(name))
+            .findFirst();
+    }
+
+    /**
+     * Finds a portstone by trying to parse the identifier as a UUID, then as a name.
+     * @param identifier The UUID string or display name.
+     * @return An Optional containing the found Portstone.
+     */
+    public Optional<Portstone> findPortstoneByIdentifier(String identifier) {
+        // Try to parse as UUID first
+        try {
+            UUID id = UUID.fromString(identifier);
+            return Optional.ofNullable(this.getPortstoneById(id));
+        } catch (IllegalArgumentException ignored) {
+            // If it fails, treat it as a name
+            return this.getPortstoneByName(identifier);
+        }
+    }
+
     public Portstone getPortstoneAt(Location location) {
         // Using a block-based location to ignore pitch/yaw
         Location blockLocation = new Location(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
         return portstoneCacheByLocation.get(blockLocation);
     }
+
+    /**
+     * Finds the closest portstone to a given location within a specified radius.
+     * @param location The location to search from.
+     * @param radius The maximum distance to search.
+     * @return An Optional containing the nearest Portstone.
+     */
+    public Optional<Portstone> findNearestPortstone(Location location, double radius) {
+        return portstoneCacheByLocation.keySet().stream()
+            .filter(loc -> loc.getWorld().equals(location.getWorld()))
+            .filter(loc -> loc.distanceSquared(location) <= radius * radius)
+            .min(Comparator.comparingDouble(loc -> loc.distanceSquared(location)))
+            .map(this::getPortstoneAt);
+    }
+
 
     public Collection<Portstone> getAllPortstones() {
         return Collections.unmodifiableCollection(portstoneCacheById.values());
@@ -217,6 +303,10 @@ public class PortstoneManager {
         if (customName != null && !customName.isBlank()) {
             return customName;
         }
-        return townName + " " + type.name().charAt(0) + type.name().substring(1).toLowerCase() + " Port";
+        String lowerCase = type.name().substring(1).toLowerCase() + " Port";
+        if (PortType.AIR.equals(type)) {
+            return nationName + " " + type.name().charAt(0) + lowerCase;
+        }
+        return townName + " " + type.name().charAt(0) + lowerCase;
     }
 }

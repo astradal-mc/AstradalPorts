@@ -29,7 +29,7 @@ public class PortstonePermissionsTest {
     @Test
     void has_shouldReturnTrue_whenSenderHasPermission() {
         // Arrange: Tell the mock sender it has the specific permission node.
-        when(mockSender.hasPermission("astradal.commands.portstone.create")).thenReturn(true);
+        when(mockSender.hasPermission("astradal.portstone.command.create")).thenReturn(true);
 
         // Act: Call the method we are testing.
         boolean result = PortstonePermissions.has(mockSender, "create");
@@ -41,7 +41,7 @@ public class PortstonePermissionsTest {
     @Test
     void has_shouldReturnFalse_whenSenderLacksPermission() {
         // Arrange: Tell the mock sender it does NOT have the permission.
-        when(mockSender.hasPermission("astradal.commands.portstone.remove")).thenReturn(false);
+        when(mockSender.hasPermission("astradal.portstone.command.remove")).thenReturn(false);
 
         // Act
         boolean result = PortstonePermissions.has(mockSender, "remove");
@@ -55,7 +55,7 @@ public class PortstonePermissionsTest {
         // Arrange: Link the Brigadier source to our mock sender
         when(mockSource.getSender()).thenReturn(mockSender);
         // Set up the permission on the mock sender
-        when(mockSender.hasPermission("astradal.commands.portstone.edit")).thenReturn(true);
+        when(mockSender.hasPermission("astradal.portstone.command.edit")).thenReturn(true);
 
         // Act: Get the predicate from the method we are testing.
         Predicate<CommandSourceStack> predicate = PortstonePermissions.requires("edit");
@@ -68,7 +68,7 @@ public class PortstonePermissionsTest {
     void requires_shouldReturnFalsePredicate_whenSenderLacksPermission() {
         // Arrange
         when(mockSource.getSender()).thenReturn(mockSender);
-        when(mockSender.hasPermission("astradal.commands.portstone.teleport")).thenReturn(false);
+        when(mockSender.hasPermission("astradal.portstone.command.teleport")).thenReturn(false);
 
         // Act
         Predicate<CommandSourceStack> predicate = PortstonePermissions.requires("teleport");

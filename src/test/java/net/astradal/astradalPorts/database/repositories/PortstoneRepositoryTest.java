@@ -18,8 +18,6 @@ public class PortstoneRepositoryTest extends BaseRepositoryTest {
 
     @BeforeEach
     void initialize() {
-        // The 'mockDbManager' field is inherited from BaseRepositoryTest.
-        // We pass a simple logger since this repo doesn't depend on the plugin instance directly.
         repository = new PortstoneRepository(Logger.getLogger("TestLogger"), mockDbManager);
     }
 
@@ -28,7 +26,7 @@ public class PortstoneRepositoryTest extends BaseRepositoryTest {
             UUID.randomUUID(), PortType.LAND, "world",
             100.0, 64.0, 100.0,
             "TestTown", "TestNation", name,
-            10.0, Material.DIAMOND_BLOCK
+            10.0, Material.DIAMOND_BLOCK, true
         );
     }
 
@@ -45,7 +43,7 @@ public class PortstoneRepositoryTest extends BaseRepositoryTest {
     void updatePortstone_shouldOverwriteFields() {
         Portstone original = createTestPortstone("Old Name");
         repository.savePortstone(original);
-        Portstone toUpdate = new Portstone(original.getId(), PortType.LAND, "world", 100.0, 64.0, 100.0, "TestTown", "TestNation", "New Name", 25.5, Material.EMERALD_BLOCK);
+        Portstone toUpdate = new Portstone(original.getId(), PortType.LAND, "world", 100.0, 64.0, 100.0, "TestTown", "TestNation", "New Name", 25.5, Material.EMERALD_BLOCK, true);
         repository.savePortstone(toUpdate);
         Portstone updated = repository.getPortstoneById(original.getIdAsString());
         assertNotNull(updated);
@@ -69,4 +67,34 @@ public class PortstoneRepositoryTest extends BaseRepositoryTest {
         repository.deletePortstone(portstone.getIdAsString());
         assertNull(repository.getPortstoneById(portstone.getIdAsString()));
     }
+
+    @Test
+    void saveAndGetById_shouldPersistAndRetrieveEnabledStatus() {
+        Portstone original = createTestPortstone("Port Alpha");
+        repository.savePortstone(original);
+
+        Portstone fetched = repository.getPortstoneById(original.getIdAsString());
+
+        assertNotNull(fetched);
+        assertEquals(original.getId(), fetched.getId());
+        // Add an assertion for the new property
+        assertTrue(fetched.isEnabled(), "Portstone should be enabled by default.");
+    }
+
+    @Test
+    void updatePortstone_shouldUpdateEnabledStatus() {
+        // Arrange: Create and save a portstone, which is enabled by default
+        Portstone original = createTestPortstone("Toggle Port");
+        repository.savePortstone(original);
+
+        // Act: Disable the portstone and save it again
+        original.setEnabled(false);
+        repository.savePortstone(original);
+
+        // Assert: Fetch it from the database and check its status
+        Portstone updated = repository.getPortstoneById(original.getIdAsString());
+        assertNotNull(updated);
+        assertFalse(updated.isEnabled(), "Portstone enabled status should have been updated to false.");
+    }
+
 }

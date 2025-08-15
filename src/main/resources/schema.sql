@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS portstones (
     nation TEXT,
     name TEXT NOT NULL,
     fee REAL DEFAULT 0,
-    icon TEXT
+    icon TEXT,
     enabled BOOLEAN NOT NULL DEFAULT 1
 );
 

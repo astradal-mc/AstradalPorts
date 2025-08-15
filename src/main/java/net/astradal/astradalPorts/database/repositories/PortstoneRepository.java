@@ -40,12 +40,9 @@ public class PortstoneRepository {
      * @param portstone The Portstone object to save.
      */
     public void savePortstone(Portstone portstone) {
-        // This "upsert" query inserts a new row. If a row with the same 'id' already
-        // exists (a conflict), it updates the existing row with the new values from
-        // the attempted insert, which are referenced via the 'excluded' keyword.
         String query = """
             INSERT INTO portstones (id, type, world, x, y, z, town, nation, name, fee, icon, enabled)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) -- FIXED: Added 12th question mark
             ON CONFLICT(id) DO UPDATE SET
                 type = excluded.type,
                 world = excluded.world,
@@ -56,14 +53,13 @@ public class PortstoneRepository {
                 nation = excluded.nation,
                 name = excluded.name,
                 fee = excluded.fee,
-                icon = excluded.icon
-                enabled = excluded.enabled;
+                icon = excluded.icon, -- FIXED: Added comma
+                enabled = excluded.enabled
             """;
 
         try (Connection connection = databaseManager.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
 
-            // Set the 12 parameters for the INSERT clause.
             stmt.setString(1, portstone.getIdAsString());
             stmt.setString(2, portstone.getType().toString());
             stmt.setString(3, portstone.getWorld());
@@ -81,7 +77,7 @@ public class PortstoneRepository {
 
         } catch (SQLException e) {
             logger.severe("Error saving portstone: " + e);
-            throw new RuntimeException("Failed to save portstone", e); // Rethrow for tests
+            throw new RuntimeException("Failed to save portstone", e);
         }
     }
 

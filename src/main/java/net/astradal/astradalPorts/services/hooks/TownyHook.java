@@ -7,8 +7,10 @@ import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import net.astradal.astradalPorts.commands.PortstonePermissions;
 import net.astradal.astradalPorts.core.Portstone;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -24,9 +26,11 @@ public class TownyHook {
     private final Logger logger;
     private boolean enabled = false;
     private TownyAPI townyAPI;
+    private EconomyHook economy;
 
-    public TownyHook(Logger logger) {
+    public TownyHook(Logger logger, EconomyHook economy) {
         this.logger = logger;
+        this.economy = economy;
     }
 
     /**
@@ -109,5 +113,17 @@ public class TownyHook {
         // We just need to check if their town's name matches the portstone's town.
         return resident.isMayor() &&
             (resident.getTownOrNull() != null && resident.getTownOrNull().getName().equals(townNameOpt.get()));
+    }
+
+    public void depositToTownBank(String townName, double amount) {
+        if (!enabled || amount <= 0) return;
+
+        Town town = townyAPI.getTown(townName);
+        if (town != null && town.getAccount().getUUID() != null) {
+            OfflinePlayer townAccount = Bukkit.getOfflinePlayer(town.getAccount().getUUID());
+            // This assumes you have an EconomyHook to do the actual deposit
+            economy.deposit(townAccount, amount);
+            logger.info("Deposited " + amount + " to " + townName + "'s town bank.");
+        }
     }
 }

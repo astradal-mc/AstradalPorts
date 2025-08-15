@@ -9,20 +9,32 @@ import net.astradal.astradalPorts.database.DatabaseManager;
 import net.astradal.astradalPorts.database.repositories.CooldownRepository;
 import net.astradal.astradalPorts.database.repositories.HologramRepository;
 import net.astradal.astradalPorts.database.repositories.PortstoneRepository;
+import net.astradal.astradalPorts.listeners.HologramListener;
+import net.astradal.astradalPorts.listeners.PlayerConnectionListener;
 import net.astradal.astradalPorts.services.ConfigService;
+import net.astradal.astradalPorts.services.CooldownService;
+import net.astradal.astradalPorts.services.HologramService;
+import net.astradal.astradalPorts.services.WarmupService;
+import net.astradal.astradalPorts.services.hooks.EconomyHook;
 import net.astradal.astradalPorts.services.hooks.TownyHook;
 import net.astradal.astradalPorts.utils.ConfigMigrationUtil;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 
+@SuppressWarnings("unused")
 public class AstradalPorts extends JavaPlugin {
 
     // Services
     private ConfigService configService;
+    private CooldownService cooldownService;
+    private HologramService hologramService;
+    private WarmupService warmupService;
 
     // Hooks
-    private static TownyHook townyHook;
+    private TownyHook townyHook;
+    private EconomyHook economyHook;
 
     // Database Components
     private DatabaseManager databaseManager;
@@ -63,9 +75,12 @@ public class AstradalPorts extends JavaPlugin {
         // Load all data from the database into the manager's cache for fast access.
         this.portstoneManager.loadAllPortstones();
 
-        // --- 5. Initialize Other Services ---
-        townyHook = new TownyHook(this.getLogger());
-        // (e.g., GUIService, CooldownService, etc. would be initialized here)
+        // --- 5. Initialize Services ---
+        setupHooks();
+
+        this.cooldownService = new CooldownService(cooldownRepository, configService);
+        this.hologramService = new HologramService(this.getLogger(), hologramRepository);
+        this.warmupService = new WarmupService(this, configService, cooldownService, economyHook, townyHook);
 
         // --- 6. Register Commands ---
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
@@ -76,7 +91,11 @@ public class AstradalPorts extends JavaPlugin {
         });
 
         // --- 7. Register Event Listeners ---
-        // (e.g., getServer().getPluginManager().registerEvents(new PlayerListener(), this);)
+        PluginManager pm = getServer().getPluginManager();
+        pm.registerEvents(new HologramListener(hologramService), this);
+        pm.registerEvents(new PlayerConnectionListener(cooldownService), this);
+        pm.registerEvents(new HologramListener(hologramService), this);
+        pm.registerEvents(this.warmupService, this);
 
         getLogger().info("AstradalPorts has been enabled successfully.");
     }
@@ -90,10 +109,33 @@ public class AstradalPorts extends JavaPlugin {
         getLogger().info("AstradalPorts has been disabled.");
     }
 
+    /**
+     * Initializes and enables integration hooks with other plugins.
+     */
+    private void setupHooks() {
+        this.economyHook = new EconomyHook(this.getLogger(), this.configService);
+        this.economyHook.initialize();
+
+        this.townyHook = new TownyHook(this.getLogger(), economyHook);
+        this.townyHook.initialize();
+    }
+
     // --- Public Getters for other classes to use ---
 
     public ConfigService getConfigService() {
         return configService;
+    }
+
+    public CooldownService getCooldownService() {
+        return this.cooldownService;
+    }
+
+    public HologramService getHologramService() {
+        return this.hologramService;
+    }
+
+    public WarmupService getWarmupService() {
+        return this.warmupService;
     }
 
     public PortstoneManager getPortstoneManager() {
@@ -110,6 +152,10 @@ public class AstradalPorts extends JavaPlugin {
 
     public HologramRepository getHologramRepository() {
         return hologramRepository;
+    }
+
+    public EconomyHook getEconomyHook() {
+        return economyHook;
     }
 
     public TownyHook getTownyHook() {

@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -96,5 +98,37 @@ public class HologramRepository {
         } catch (SQLException e) {
             logger.severe("Failed to delete hologram for portstone " + portstoneId + ": " + e.getMessage());
         }
+    }
+
+    /**
+     * Retrieves all persisted hologram mappings from the database.
+     * <p>
+     * This is typically used on plugin startup to populate the hologram service's cache.
+     * It will safely skip any entries with invalid UUIDs.
+     *
+     * @return A map where the key is the Portstone's UUID and the value is the associated hologram entity's UUID.
+     */
+    public Map<UUID, UUID> getAllHolograms() {
+        Map<UUID, UUID> holograms = new HashMap<>();
+        String sql = "SELECT portstone_id, entity_uuid FROM holograms";
+
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                try {
+                    UUID portstoneId = UUID.fromString(rs.getString("portstone_id"));
+                    UUID entityId = UUID.fromString(rs.getString("entity_uuid"));
+                    holograms.put(portstoneId, entityId);
+                } catch (IllegalArgumentException e) {
+                    logger.warning("Skipping invalid UUID entry in holograms table: " + e.getMessage());
+                }
+            }
+        } catch (SQLException e) {
+            logger.severe("Failed to retrieve all holograms: " + e.getMessage());
+        }
+
+        return holograms;
     }
 }

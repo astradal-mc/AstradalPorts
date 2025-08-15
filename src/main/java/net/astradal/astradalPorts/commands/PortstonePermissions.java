@@ -11,7 +11,7 @@ import java.util.function.Predicate;
  */
 public final class PortstonePermissions {
 
-    private static final String BASE_NODE = "astradal.portstone.commands.";
+    private static final String BASE_NODE = "astradal.portstone.command.";
 
     /**
      * Checks if a CommandSender has a specific portstone subcommand permission.
