@@ -3,6 +3,8 @@ package net.astradal.astradalPorts.services;
 import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.core.PortstoneManager;
+import net.astradal.astradalPorts.services.hooks.EconomyHook;
+import net.astradal.astradalPorts.utils.PortstoneFormatter;
 import net.astradal.astradalPorts.utils.PortstoneGUIHolder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -14,7 +16,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,10 +24,12 @@ import java.util.List;
 public class GUIService {
 
     private final AstradalPorts plugin;
+    private final EconomyHook economyHook;
     public final NamespacedKey destinationUuidKey;
 
-    public GUIService(AstradalPorts plugin) {
+    public GUIService(AstradalPorts plugin, EconomyHook economyHook) {
         this.plugin = plugin;
+        this.economyHook = economyHook;
         this.destinationUuidKey = new NamespacedKey(plugin, "portstone_destination_uuid");
     }
 
@@ -68,15 +71,7 @@ public class GUIService {
 
             meta.displayName(Component.text(destination.getDisplayName(), NamedTextColor.AQUA));
 
-            List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("Owner: ", NamedTextColor.GRAY).append(Component.text(destination.getTown() != null ? destination.getTown() : "Wilderness", NamedTextColor.WHITE)));
-            double fee = destination.getTravelFee();
-            if (fee > 0) {
-                lore.add(Component.text("Fee: ", NamedTextColor.GRAY).append(Component.text(plugin.getEconomyHook().format(fee), NamedTextColor.GOLD)));
-            }
-            lore.add(Component.empty());
-            lore.add(Component.text("Click to travel!", NamedTextColor.GREEN));
-            meta.lore(lore);
+            meta.lore(PortstoneFormatter.formatLore(sourcePortstone, destination, economyHook));
 
             // IMPORTANT: Store the destination UUID on the item
             meta.getPersistentDataContainer().set(destinationUuidKey, PersistentDataType.STRING, destination.getId().toString());

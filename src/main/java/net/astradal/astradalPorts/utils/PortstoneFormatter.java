@@ -6,6 +6,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Location;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A utility class for creating formatted text component displays for Portstones.
@@ -71,6 +75,49 @@ public final class PortstoneFormatter {
             .build();
     }
 
+    /**
+     * Creates a detailed lore for a portstone icon in the GUI.
+     *
+     * @param source      The portstone the player is teleporting from.
+     * @param destination The portstone this lore is for.
+     * @param economyHook The economy hook for formatting currency.
+     * @return A list of components representing the item's lore.
+     */
+    public static List<Component> formatLore(Portstone source, Portstone destination, EconomyHook economyHook) {
+        List<Component> lore = new ArrayList<>();
+
+        // Owner Info
+        String owner = destination.getTown() != null ? destination.getTown() : "Wilderness";
+        lore.add(formatLoreLine("Owner", Component.text(owner, NamedTextColor.WHITE)));
+
+        // Location Info
+        Location loc = destination.getLocation();
+        String locString = String.format("%s (%d, %d, %d)", loc.getWorld().getName(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+        lore.add(formatLoreLine("Location", Component.text(locString, NamedTextColor.WHITE)));
+
+        // Distance Info
+        int distance = (int) source.getLocation().distance(destination.getLocation());
+        lore.add(formatLoreLine("Distance", Component.text(distance + " blocks", NamedTextColor.WHITE)));
+
+        // Fee Info
+        double fee = destination.getTravelFee();
+        if (fee > 0) {
+            lore.add(formatLoreLine("Fee", Component.text(economyHook.format(fee), NamedTextColor.GOLD)));
+        }
+
+        // Final prompt
+        lore.add(Component.empty());
+        lore.add(Component.text("Click to travel!", NamedTextColor.GREEN));
+
+        return lore;
+    }
+
+    /**
+     * Helper to create a "Key: Value" lore line without decoration.
+     * */
+    private static Component formatLoreLine(String key, Component value) {
+        return Component.text(key + ": ", NamedTextColor.GRAY).append(value).decoration(TextDecoration.ITALIC, false);
+    }
     /**
      * Helper to create a "Key: Value" component line.
      */
