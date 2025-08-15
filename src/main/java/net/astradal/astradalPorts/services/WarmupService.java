@@ -1,6 +1,7 @@
 package net.astradal.astradalPorts.services;
 
 import net.astradal.astradalPorts.AstradalPorts;
+import net.astradal.astradalPorts.commands.PortstonePermissions;
 import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.events.PortstoneTeleportEvent;
 import net.kyori.adventure.text.Component;
@@ -49,7 +50,7 @@ public class WarmupService implements Listener {
         }
 
         int warmupSeconds = configService.getWarmup(destination.getType().name());
-        if (warmupSeconds <= 0) {
+        if (warmupSeconds <= 0 || PortstonePermissions.canBypass(player, "warmup")) {
             // No warmup, teleport immediately
             teleportPlayer(player, source, destination);
             return;
@@ -87,7 +88,7 @@ public class WarmupService implements Listener {
         double fee = destination.getTravelFee();
 
         // --- 1. Charge Economy Fee ---
-        if (economyHook.isEnabled() && fee > 0) {
+        if (economyHook.isEnabled() && fee > 0 && !PortstonePermissions.canBypass(player, "fee")) {
             if (!economyHook.chargeFee(player, fee)) {
                 player.sendMessage(Component.text("You can't afford the " + economyHook.format(fee) + " travel fee!", NamedTextColor.RED));
                 return; // Stop the teleport

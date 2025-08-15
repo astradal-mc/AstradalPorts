@@ -63,16 +63,20 @@ public final class TeleportCommand {
         }
         Portstone source = sourceOpt.get();
 
-        // 3. Perform final validation checks
+        // 3. Perform final validation checks, now with bypasses
         if (source.getId().equals(destination.getId())) {
             player.sendMessage(Component.text("You are already at this portstone.", NamedTextColor.RED));
             return 0;
         }
-        if (!destination.isEnabled()) {
+
+        // Bypass check for disabled portstones
+        if (!destination.isEnabled() && !PortstonePermissions.canBypass(player, "disabled")) {
             player.sendMessage(Component.text("That portstone is currently disabled.", NamedTextColor.RED));
             return 0;
         }
-        if (plugin.getCooldownService().isOnCooldown(player, destination.getType())) {
+
+        // Bypass check for cooldowns
+        if (!PortstonePermissions.canBypass(player, "cooldown") && plugin.getCooldownService().isOnCooldown(player, destination.getType())) {
             long remaining = plugin.getCooldownService().getRemainingSeconds(player, destination.getType());
             player.sendMessage(Component.text("You are on cooldown for this port type. Time remaining: " + remaining + "s", NamedTextColor.RED));
             return 0;
