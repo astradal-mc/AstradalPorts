@@ -1,6 +1,7 @@
 package net.astradal.astradalPorts.services;
 
 import net.astradal.astradalPorts.AstradalPorts;
+import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.*;
@@ -27,6 +28,13 @@ public class ConfigService {
     // --- Cached Teleport Rules ---
     private boolean allowCrossWorldTravel = false;
     private Set<String> disabledWorlds = new HashSet<>();
+
+    // --- Cached Effect Settings ---
+    private Particle warmupParticle = Particle.ENCHANT;
+    private int warmupParticleCount = 10;
+    private String soundWarmupStart = "BLOCK_BEACON_ACTIVATE";
+    private String soundTeleportSuccess = "ENTITY_ENDERMAN_TELEPORT";
+    private String soundTeleportCancel = "BLOCK_REDSTONE_TORCH_BURNOUT";
 
     public ConfigService(AstradalPorts plugin) {
         this.plugin = plugin;
@@ -67,6 +75,25 @@ public class ConfigService {
         economyEnabled = config.getBoolean("economy.enabled", true);
         economyRequireBalance = config.getBoolean("economy.requireBalance", true);
         guiTitleColor = config.getString("gui.titleColor", "black");
+
+
+        // --- Load Effect Settings ---
+        try {
+            String particleName = config.getString("effects.warmup.particle", "ENCHANT").toUpperCase();
+            this.warmupParticle = Particle.valueOf(particleName);
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Invalid particle name in config.yml. Defaulting to ENCHANT.");
+            this.warmupParticle = Particle.ENCHANT;
+        }
+        this.warmupParticleCount = config.getInt("effects.warmup.count", 10);
+        this.soundWarmupStart = config.getString("effects.sounds.warmup-start", "BLOCK_BEACON_ACTIVATE");
+        this.soundTeleportSuccess = config.getString("effects.sounds.teleport-success", "ENTITY_ENDERMAN_TELEPORT");
+        this.soundTeleportCancel = config.getString("effects.sounds.teleport-cancel", "BLOCK_REDSTONE_TORCH_BURNOUT");
+    }
+
+    // --- Getters for Effect Settings ---
+    public Particle getWarmupParticle() {
+        return warmupParticle;
     }
 
     /**
@@ -141,5 +168,21 @@ public class ConfigService {
      */
     public boolean isWorldDisabled(String worldName) {
         return disabledWorlds.contains(worldName.toLowerCase());
+    }
+
+    public int getWarmupParticleCount() {
+        return warmupParticleCount;
+    }
+
+    public String getSoundWarmupStart() {
+        return soundWarmupStart;
+    }
+
+    public String getSoundTeleportSuccess() {
+        return soundTeleportSuccess;
+    }
+
+    public String getSoundTeleportCancel() {
+        return soundTeleportCancel;
     }
 }

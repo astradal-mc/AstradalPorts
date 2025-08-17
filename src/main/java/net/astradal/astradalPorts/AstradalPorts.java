@@ -1,6 +1,5 @@
 package net.astradal.astradalPorts;
 
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -47,7 +46,11 @@ public class AstradalPorts extends JavaPlugin {
     public void onEnable() {
         // --- 1. Configuration ---
         saveDefaultConfig();
+        // This handles adding new keys
         ConfigMigrationUtil.migrateConfigDefaults(this);
+        // This handles updating the version key
+        ConfigMigrationUtil.updateVersionInConfig(this);
+
         this.configService = new ConfigService(this);
 
         // --- 2. Database Setup ---

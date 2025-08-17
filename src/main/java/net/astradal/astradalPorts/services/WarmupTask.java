@@ -21,11 +21,13 @@ public class WarmupTask implements Runnable {
     private final Location startLocation;
     private final int durationTicks;
     private final BossBar bossBar;
+    private final Particle particle;
+    private final int particleCount;
 
     private int taskId;
     private int ticksElapsed = 0;
 
-    public WarmupTask(WarmupService warmupService, Player player, Portstone source, Portstone target, int seconds) {
+    public WarmupTask(WarmupService warmupService, Player player, Portstone source, Portstone target, int seconds, Particle particle, int particleCount) {
         this.warmupService = warmupService;
         this.player = player;
         this.source = source;
@@ -39,6 +41,8 @@ public class WarmupTask implements Runnable {
             BossBar.Color.BLUE,
             BossBar.Overlay.PROGRESS
         );
+        this.particle = particle;
+        this.particleCount = particleCount;
     }
 
     @Override
@@ -48,7 +52,7 @@ public class WarmupTask implements Runnable {
         // Update visuals
         float progress = (float) ticksElapsed / durationTicks;
         bossBar.progress(Math.min(progress, 1.0f));
-        player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation().add(0, 1, 0), 10, 0.4, 0.6, 0.4, 0);
+        player.getWorld().spawnParticle(this.particle, player.getLocation().add(0, 1, 0), particleCount, 0.4, 0.6, 0.4, 0);
 
         // Check for completion
         if (ticksElapsed >= durationTicks) {

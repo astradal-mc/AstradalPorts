@@ -1,62 +1,67 @@
 package net.astradal.astradalPorts.utils;
 
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Objects;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 /**
  * Utility class responsible for migrating configuration files.
- * Adds missing config keys with default values without overwriting user changes.
+ * It ensures that new keys from the plugin's default config are added to
+ * the user's existing config without overwriting their changes.
  */
 public final class ConfigMigrationUtil {
 
     private ConfigMigrationUtil() {
-        // Utility class - prevent instantiation
+        // Utility class
     }
 
     /**
-     * Performs config migration by adding missing default keys and saving the config if modified.
+     * Updates the user's config.yml by adding any missing default keys
+     * from the version included in the plugin JAR.
      *
-     * @param plugin the JavaPlugin instance for accessing config and logging
+     * @param plugin the JavaPlugin instance for accessing the config
      */
     public static void migrateConfigDefaults(JavaPlugin plugin) {
+        // 1. Get the plugin's live configuration
         FileConfiguration config = plugin.getConfig();
-        boolean changed = false;
 
-        changed |= addDefaultIfMissing(config, "cooldowns.air", 30);
-        changed |= addDefaultIfMissing(config, "cooldowns.land", 90);
-        changed |= addDefaultIfMissing(config, "cooldowns.sea", 0);
+        // 2. Load the default config from the JAR resources
+        InputStream defaultConfigStream = plugin.getResource("config.yml");
+        if (defaultConfigStream != null) {
+            YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defaultConfigStream));
 
-        changed |= addDefaultIfMissing(config, "warmups.air", 0);
-        changed |= addDefaultIfMissing(config, "warmups.land", 3);
-        changed |= addDefaultIfMissing(config, "warmups.sea", 0);
-
-        changed |= addDefaultIfMissing(config, "land.maxRange", 2000);
-
-        changed |= addDefaultIfMissing(config, "economy.enabled", true);
-        changed |= addDefaultIfMissing(config, "economy.requireBalance", true);
-
-        changed |= addDefaultIfMissing(config, "gui.titleColor", "black");
-
-        if (changed) {
-            plugin.getLogger().info("Config defaults migrated: adding missing keys");
-            config.options().copyDefaults(true);
-            plugin.saveConfig();
+            // 3. Set the loaded config as the defaults for the live config
+            config.setDefaults(defaultConfig);
         }
+
+        // 4. Copy any missing defaults into the live config
+        config.options().copyDefaults(true);
+
+        // 5. Save the live config to disk, which writes the new keys
+        plugin.saveConfig();
     }
 
     /**
-     * Adds a default config value if the given path is not already set.
+     * Checks the version in the config file against the plugin's actual version
+     * and updates it if they do not match.
      *
-     * @param config the FileConfiguration instance
-     * @param path the config key path to check and set
-     * @param defaultValue the default value to set if missing
-     * @return true if the config was modified by adding a default, false otherwise
+     * @param plugin The JavaPlugin instance.
      */
-    private static boolean addDefaultIfMissing(FileConfiguration config, String path, Object defaultValue) {
-        if (!config.isSet(path)) {
-            config.set(path, defaultValue);
-            return true;
+    public static void updateVersionInConfig(JavaPlugin plugin) {
+        FileConfiguration config = plugin.getConfig();
+        String jarVersion = plugin.getPluginMeta().getVersion();
+        String configVersion = config.getString("plugin-version");
+
+        // If the versions don't match, update the config
+        if (!Objects.equals(jarVersion, configVersion)) {
+            config.set("plugin-version", jarVersion);
+            plugin.saveConfig();
+            plugin.getLogger().info("Updated plugin-version in config.yml to " + jarVersion);
         }
-        return false;
     }
+
 }

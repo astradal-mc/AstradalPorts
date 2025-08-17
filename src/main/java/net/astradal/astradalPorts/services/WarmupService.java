@@ -7,10 +7,9 @@ import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.events.PortstoneTeleportEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
+import org.bukkit.*;
 import net.astradal.astradalPorts.services.hooks.EconomyHook;
 import net.astradal.astradalPorts.services.hooks.TownyHook;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -58,7 +57,14 @@ public class WarmupService implements Listener {
             return;
         }
 
-        WarmupTask task = new WarmupTask(this, player, source, destination, warmupSeconds);
+        // Play the warmup start sound
+        playSound(player, configService.getSoundWarmupStart());
+
+        // Get particle info from config and pass it to the task
+        Particle particle = configService.getWarmupParticle();
+        int particleCount = configService.getWarmupParticleCount();
+        WarmupTask task = new WarmupTask(this, player, source, destination, warmupSeconds, particle, particleCount);
+
         int taskId = Bukkit.getScheduler().runTaskTimer(plugin, task, 0L, 1L).getTaskId();
         task.start(taskId);
 
@@ -126,6 +132,26 @@ public class WarmupService implements Listener {
 
         // --- 4. Apply Cooldown ---
         cooldownService.applyCooldown(player, destination.getType());
+    }
+
+    // --- Sound Player Helper ---
+    private void playSound(Player player, String soundName) {
+        if (soundName == null || soundName.isBlank() || soundName.equalsIgnoreCase("none")) {
+            return;
+        }
+
+        // Convert the Bukkit enum style (BLOCK_BEACON_ACTIVATE) to a Minecraft key style (block.beacon.activate)
+        String keyName = soundName.toLowerCase().replace('_', '.');
+        NamespacedKey soundKey = NamespacedKey.minecraft(keyName);
+
+        // Look up the sound in the server's registry
+        Sound sound = Registry.SOUNDS.get(soundKey);
+
+        if (sound != null) {
+            player.playSound(player.getLocation(), sound, 1.0f, 1.0f);
+        } else {
+            plugin.getLogger().warning("Invalid sound name in config.yml: '" + soundName + "'");
+        }
     }
 
     /**
