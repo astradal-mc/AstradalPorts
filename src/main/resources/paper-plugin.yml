@@ -26,6 +26,9 @@ permissions:
   astradal.portstone.command.remove:
     description: "Lets player remove a portstone by ID or by looking at it"
     default: op
+  astradal.portstone.command.removeall:
+    description: "Lets player remove all registered portstones in database."
+    default: op
   astradal.portstone.command.edit:
     description: "Lets player edit portstone"
     default: true
