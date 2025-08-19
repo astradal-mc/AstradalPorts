@@ -1,0 +1,79 @@
+# Name for this workflow, shown on GitHub's "Actions" tab
+name: Build and Release
+
+# Controls when the workflow will run
+on:
+  # Run on every push and pull request to the main branch (for testing)
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Run when a new release is created on GitHub (for publishing)
+  release:
+    types: [ created ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This job builds the plugin and runs tests
+  build:
+    # The type of virtual machine to run the job on
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # 1. Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Sets up the Java Development Kit (JDK)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # 3. Caches Gradle dependencies to speed up future builds
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      # 4. Make the Gradle wrapper executable
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # 5. Build the project and run all tests
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      # 6. Upload the built JAR file as an artifact
+      # This saves the JAR for the next job (the release job) to use
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AstradalPorts-JAR
+          path: build/libs/AstradalPorts-*.jar
+
+  # This job only runs when a release is created
+  publish:
+    # It needs the 'build' job to complete successfully first
+    needs: build
+    # Only run this job if the trigger was a GitHub Release event
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to write to the release
+
+    steps:
+      # 1. Download the JAR artifact that the 'build' job created
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: AstradalPorts-JAR
+
+      # 2. Upload the JAR to the GitHub Release
+      # This action automatically finds the JAR and attaches it to the release
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AstradalPorts-*.jar
