@@ -78,6 +78,7 @@ public class WarmupService implements Listener {
             Bukkit.getScheduler().cancelTask(task.getTaskId());
             task.cancel();
             teleportPlayer(player, task.getSource(), task.getDestination());
+            playSound(player, configService.getSoundTeleportSuccess());
         }
     }
 
@@ -89,6 +90,7 @@ public class WarmupService implements Listener {
             if (showMessage) {
                 player.sendMessage(Component.text(reason, NamedTextColor.RED));
             }
+            playSound(player, configService.getSoundTeleportCancel());
         }
     }
 
