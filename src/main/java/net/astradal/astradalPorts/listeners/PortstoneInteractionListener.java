@@ -1,10 +1,15 @@
 package net.astradal.astradalPorts.listeners;
 
+import net.astradal.astradalPorts.AstradalPorts;
+import net.astradal.astradalPorts.commands.PortstonePermissions;
 import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.core.PortstoneManager;
 import net.astradal.astradalPorts.services.GUIService;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -22,10 +27,7 @@ public class PortstoneInteractionListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND) {
-            return;
-        }
-
+        if (event.getHand() != EquipmentSlot.HAND) return;
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
         Block clickedBlock = event.getClickedBlock();
@@ -33,8 +35,16 @@ public class PortstoneInteractionListener implements Listener {
 
         Portstone portstone = portstoneManager.getPortstoneAt(clickedBlock.getLocation());
         if (portstone != null) {
+            Player player = event.getPlayer();
             event.setCancelled(true); // Prevent default lodestone behavior
-            guiService.openPortstoneGUI(event.getPlayer(), portstone);
+
+            // Check for the 'use' permission before opening the GUI.
+            if (!player.hasPermission("astradal.portstone.use")) {
+                player.sendMessage(Component.text("You do not have permission to use portstones.", NamedTextColor.RED));
+                return;
+            }
+
+            guiService.openPortstoneGUI(player, portstone);
         }
     }
 }

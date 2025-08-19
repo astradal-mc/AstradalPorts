@@ -17,6 +17,9 @@ dependencies:
       required: false
 
 permissions:
+  astradal.portstone.use:
+    description: "Allows a player to right-click a portstone to open the travel GUI."
+    default: true
   astradal.portstone.command.create:
     description: "Lets player create portstone"
     default: op
@@ -31,7 +34,7 @@ permissions:
     default: true
   astradal.portstone.command.list:
     description: "Lets player get list of all Registered Portstones"
-    default: op
+    default: true
   astradal.portstone.command.help:
     description: "Lets player get the help menu for Portstone commands"
     default: true
@@ -40,6 +43,7 @@ permissions:
     default: op
   astradal.portstone.command.version:
     description: "Lets player view the AstradalPorts plugin version"
+    default: op
 
 commands:
   portstone:

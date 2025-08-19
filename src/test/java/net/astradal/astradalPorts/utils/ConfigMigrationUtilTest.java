@@ -46,9 +46,12 @@ public class ConfigMigrationUtilTest {
     public void migrateConfigDefaults_addsMissingKeys_andPreservesExisting() throws IOException {
         // Arrange: Create a fake "old" config file
         YamlConfiguration oldConfig = new YamlConfiguration();
-        oldConfig.set("portstones.land.cooldown", 9999); // A custom, user-set value
-        oldConfig.set("messages.teleport-success", "<gold>Woosh!</gold>"); // Another custom value
+        oldConfig.set("portstones.land.cooldown", 9999);
+        oldConfig.set("messages.teleport-success", "<gold>Woosh!</gold>");
         oldConfig.save(configFile);
+
+        // ADDED: Force the plugin to load our new file from the mock disk
+        plugin.reloadConfig();
 
         // Act: Run the migration on the "old" config
         ConfigMigrationUtil.migrateConfigDefaults(plugin);
@@ -56,15 +59,9 @@ public class ConfigMigrationUtilTest {
         // Assert: Load the final config from the mock file system
         FileConfiguration finalConfig = YamlConfiguration.loadConfiguration(configFile);
 
-        // 1. Check that the user's custom values were preserved
         assertEquals(9999, finalConfig.getInt("portstones.land.cooldown"));
         assertEquals("<gold>Woosh!</gold>", finalConfig.getString("messages.teleport-success"));
-
-        // 2. Check that a new, missing key was added from the defaults
-        String expectedDefaultMessage = defaultConfig.getString("messages.error-cant-afford");
-        assertEquals(expectedDefaultMessage, finalConfig.getString("messages.error-cant-afford"));
-
-        // 3. Check that a new, missing section was added
+        assertEquals(defaultConfig.getString("messages.error-cant-afford"), finalConfig.getString("messages.error-cant-afford"));
         assertEquals("BLOCK_BEACON_ACTIVATE", finalConfig.getString("effects.sounds.warmup-start"));
     }
 
@@ -75,10 +72,12 @@ public class ConfigMigrationUtilTest {
         String oldVersion = "old-version";
         assertNotEquals(jarVersion, oldVersion);
 
-        // Create a config file with an old version number
         YamlConfiguration config = new YamlConfiguration();
         config.set("plugin-version", oldVersion);
         config.save(configFile);
+
+        // ADDED: Force the plugin to load our new file from the mock disk
+        plugin.reloadConfig();
 
         // Act
         ConfigMigrationUtil.updateVersionInConfig(plugin);

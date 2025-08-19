@@ -1,6 +1,7 @@
 package net.astradal.astradalPorts.services;
 
 import net.astradal.astradalPorts.AstradalPorts;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -35,6 +36,13 @@ public class ConfigService {
     private String soundWarmupStart = "BLOCK_BEACON_ACTIVATE";
     private String soundTeleportSuccess = "ENTITY_ENDERMAN_TELEPORT";
     private String soundTeleportCancel = "BLOCK_REDSTONE_TORCH_BURNOUT";
+
+    // --- NEW: Cached GUI Settings ---
+    private Material guiFillItem = Material.GRAY_STAINED_GLASS_PANE;
+    private SpecialItemConfig townSpawnItemConfig;
+
+    // A record is a simple, immutable data class. Perfect for this.
+    public record SpecialItemConfig(boolean enabled, int slot, Material item, String name, List<String> lore) {}
 
     public ConfigService(AstradalPorts plugin) {
         this.plugin = plugin;
@@ -71,10 +79,30 @@ public class ConfigService {
         List<String> worldsList = config.getStringList("teleport-rules.disabled-worlds");
         this.disabledWorlds = worldsList.stream().map(String::toLowerCase).collect(Collectors.toSet());
 
-        // --- Load Economy and GUI settings ---
+        // --- Load Economy Settings ---
         economyEnabled = config.getBoolean("economy.enabled", true);
         economyRequireBalance = config.getBoolean("economy.requireBalance", true);
-        guiTitleColor = config.getString("gui.titleColor", "black");
+
+        // --- Load GUI Settings ---
+        guiTitleColor = config.getString("gui.title-color", "black");
+
+        try {
+            String fillItemName = config.getString("gui.fill-item", "GRAY_STAINED_GLASS_PANE").toUpperCase();
+            this.guiFillItem = Material.valueOf(fillItemName);
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Invalid gui.fill-item material in config.yml. Defaulting to GRAY_STAINED_GLASS_PANE.");
+            this.guiFillItem = Material.GRAY_STAINED_GLASS_PANE;
+        }
+
+        // Load the town spawn special item config
+        String path = "gui.special-items.town-spawn.";
+        this.townSpawnItemConfig = new SpecialItemConfig(
+            config.getBoolean(path + "enabled", false),
+            config.getInt(path + "slot", 4),
+            Material.matchMaterial(config.getString(path + "item", "COMPASS")),
+            config.getString(path + "name", "<gold>Town Spawn</gold>"),
+            config.getStringList(path + "lore")
+        );
 
 
         // --- Load Effect Settings ---
@@ -170,19 +198,16 @@ public class ConfigService {
         return disabledWorlds.contains(worldName.toLowerCase());
     }
 
-    public int getWarmupParticleCount() {
-        return warmupParticleCount;
-    }
+    // --- Getters for Particle Setting ---
+    public int getWarmupParticleCount() { return warmupParticleCount; }
 
-    public String getSoundWarmupStart() {
-        return soundWarmupStart;
-    }
+    // --- Getters for Sound Settings ---
+    public String getSoundWarmupStart() { return soundWarmupStart; }
+    public String getSoundTeleportSuccess() { return soundTeleportSuccess; }
+    public String getSoundTeleportCancel() { return soundTeleportCancel; }
 
-    public String getSoundTeleportSuccess() {
-        return soundTeleportSuccess;
-    }
+    // --- Getters for GUI Settings ---
+    public Material getGuiFillItem() { return guiFillItem; }
+    public SpecialItemConfig getTownSpawnItemConfig() { return townSpawnItemConfig; }
 
-    public String getSoundTeleportCancel() {
-        return soundTeleportCancel;
-    }
 }
