@@ -35,6 +35,7 @@ public class WarmupTask implements Runnable {
         this.durationTicks = seconds * 20;
         this.startLocation = player.getLocation().getBlock().getLocation(); // Use block location to prevent tiny movements from cancelling
 
+        // TODO: Configurable message
         this.bossBar = BossBar.bossBar(
             Component.text("Teleporting to " + target.getDisplayName(), NamedTextColor.AQUA),
             0f,

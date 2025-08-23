@@ -20,6 +20,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -65,7 +66,7 @@ public class GUIService {
             .toList();
 
         if (availableDestinations.isEmpty()) {
-            player.sendMessage(Component.text("No available destinations of this type.", NamedTextColor.YELLOW));
+            plugin.getMessageService().sendMessage(player, "warning-no-destinations");
         }
 
         // 2. Create the inventory
@@ -76,8 +77,10 @@ public class GUIService {
         // Ensure the inventory size is valid (max 54)
         size = Math.min(size, 54);
 
-        Component title = Component.text("Teleport from: " + sourcePortstone.getDisplayName());
-        Inventory gui = Bukkit.createInventory(new PortstoneGUIHolder(sourcePortstone), size, title);
+        Component title = plugin.getMessageService().getFormattedComponent("gui-title", Map.of(
+            "source_name", sourcePortstone.getDisplayName()
+        ));
+        Inventory gui = Bukkit.createInventory(new PortstoneGUIHolder(), size, title);
 
         // 3. Place Special Items
         ConfigService.SpecialItemConfig townSpawnConfig = plugin.getConfigService().getTownSpawnItemConfig();
@@ -98,7 +101,7 @@ public class GUIService {
             gui.setItem(townSpawnConfig.slot(), spawnItem);
         }
 
-        // --- 4 Fill the rest of the top row slots (and any other empty slots later) ---
+        // 4. Fill the rest of the top row slots (and any other empty slots later)
         Material fillMaterial = plugin.getConfigService().getGuiFillItem();
         if (fillMaterial != null && fillMaterial != Material.AIR) {
             ItemStack fillItem = new ItemStack(fillMaterial);

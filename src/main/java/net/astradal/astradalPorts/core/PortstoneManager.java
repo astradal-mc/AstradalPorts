@@ -66,6 +66,7 @@ public class PortstoneManager {
         this.createPortstone(player, type, null);
     }
 
+    //TODO: Add configurable messages for all the exceptions
     /**
      * Creates a new portstone with an optional custom name, saves it, and adds it to the cache.
      * This method contains all the core validation and business logic for portstone creation.
@@ -73,10 +74,9 @@ public class PortstoneManager {
      * @param player     The player creating the portstone.
      * @param type       The PortType for the new portstone.
      * @param customName The optional custom name for the portstone. Can be null.
-     * @return The newly created Portstone object.
      * @throws PortstoneCreationException if any validation fails.
      */
-    public Portstone createPortstone(Player player, PortType type, @Nullable String customName) throws PortstoneCreationException {
+    public void createPortstone(Player player, PortType type, @Nullable String customName) throws PortstoneCreationException {
         // 1. Validate the target block
         Block target = player.getTargetBlockExact(5);
         if (target == null || target.getType() != Material.LODESTONE) {
@@ -130,7 +130,6 @@ public class PortstoneManager {
         // 7. Fire events or call other services
         Bukkit.getPluginManager().callEvent(new PortstoneCreateEvent(portstone));
 
-        return portstone;
     }
 
     /**

@@ -11,6 +11,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 
+import java.util.Map;
+
 public final class ReloadCommand {
 
     /**
@@ -31,7 +33,7 @@ public final class ReloadCommand {
     @SuppressWarnings("SameReturnValue")
     private static int execute(CommandContext<CommandSourceStack> ctx, AstradalPorts plugin) {
         CommandSender sender = ctx.getSource().getSender();
-        sender.sendMessage(Component.text("Reloading AstradalPorts configuration...", NamedTextColor.YELLOW));
+        plugin.getMessageService().sendMessage(sender, "info-command-reload-starting");
 
         long startTime = System.currentTimeMillis();
 
@@ -47,7 +49,7 @@ public final class ReloadCommand {
 
         long duration = System.currentTimeMillis() - startTime;
 
-        sender.sendMessage(Component.text("Reload complete! Took " + duration + "ms.", NamedTextColor.GREEN));
+        plugin.getMessageService().sendMessage(sender, "success-command-reload-complete", Map.of("duration", String.valueOf(duration)));
 
         return Command.SINGLE_SUCCESS;
     }

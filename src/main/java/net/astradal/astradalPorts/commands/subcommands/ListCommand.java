@@ -43,7 +43,7 @@ public final class ListCommand {
         List<Portstone> filteredPortstones = filter.apply(allPortstones);
 
         if (filteredPortstones.isEmpty()) {
-            sender.sendMessage(Component.text("No portstones found matching your criteria.", NamedTextColor.YELLOW));
+            plugin.getMessageService().sendMessage(sender, "warning-command-none-found");
             return Command.SINGLE_SUCCESS;
         }
 

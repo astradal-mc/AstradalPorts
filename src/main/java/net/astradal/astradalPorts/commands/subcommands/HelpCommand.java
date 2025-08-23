@@ -8,6 +8,7 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.commands.PortstonePermissions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -23,6 +24,7 @@ public final class HelpCommand {
         put("create", "Creates a new portstone from lodestone.");
         put("edit", "Edits the properties of an existing portstone.");
         put("remove", "Removes the portstone you are looking at.");
+        put("removeall", "Removes all registered portstones. Use with caution.");
         put("list", "Lists all available portstones.");
         put("info", "Shows information about the portstone you're looking at.");
         put("teleport", "Opens the GUI to teleport to another portstone.");
@@ -34,16 +36,16 @@ public final class HelpCommand {
     /**
      * Builds the '/portstone help' command node.
      */
-    public static LiteralArgumentBuilder<CommandSourceStack> build(CommandDispatcher<CommandSourceStack> dispatcher) {
+    public static LiteralArgumentBuilder<CommandSourceStack> build(CommandDispatcher<CommandSourceStack> dispatcher, AstradalPorts plugin) {
         return Commands.literal("help")
             .requires(PortstonePermissions.requires("help"))
-            .executes(ctx -> execute(ctx, dispatcher));
+            .executes(ctx -> execute(ctx, dispatcher, plugin));
     }
 
     /**
      * Executes the help command logic.
      */
-    public static int execute(CommandContext<CommandSourceStack> ctx, CommandDispatcher<CommandSourceStack> dispatcher) {
+    public static int execute(CommandContext<CommandSourceStack> ctx, CommandDispatcher<CommandSourceStack> dispatcher, AstradalPorts plugin) {
         CommandSender sender = ctx.getSource().getSender();
 
         sender.sendMessage(Component.text("--- AstradalPorts Help ---", NamedTextColor.GOLD));
@@ -52,7 +54,7 @@ public final class HelpCommand {
         CommandNode<CommandSourceStack> portstoneNode = dispatcher.getRoot().getChild("portstone");
 
         if (portstoneNode == null) {
-            sender.sendMessage(Component.text("Error: Could not find command information.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-no-info");
             return 0;
         }
 
@@ -65,7 +67,7 @@ public final class HelpCommand {
             // Only show commands the player has permission to use
             if (!PortstonePermissions.has(sender, subcommand)) continue;
 
-            String description = DESCRIPTIONS.getOrDefault(subcommand, "No description available.");
+            String description = DESCRIPTIONS.getOrDefault(subcommand, plugin.getConfigService().getMessage("error-command-no-description", "No description available."));
             String usage = "/portstone " + subcommand;
 
             sender.sendMessage(

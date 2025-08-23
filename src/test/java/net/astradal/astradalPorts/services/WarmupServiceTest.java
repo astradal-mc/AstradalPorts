@@ -165,7 +165,7 @@ public class WarmupServiceTest {
     }
 
     private static class FakeTownyHook extends TownyHook {
-        // CORRECTED: The constructor now accepts the EconomyHook
+        // The constructor now accepts the EconomyHook
         public FakeTownyHook(Logger logger, EconomyHook economyHook) {
             // And passes it to the real TownyHook's constructor
             super(logger, economyHook);

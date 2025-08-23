@@ -69,7 +69,7 @@ public class WarmupService implements Listener {
         task.start(taskId);
 
         activeWarmups.put(player.getUniqueId(), task);
-        player.sendMessage(Component.text("Teleporting in " + warmupSeconds + " seconds. Don't move!", NamedTextColor.YELLOW));
+        plugin.getMessageService().sendMessage(player, "teleport-warmup", Map.of("seconds", String.valueOf(warmupSeconds)));
     }
 
     public void completeWarmup(WarmupTask task) {
@@ -100,9 +100,10 @@ public class WarmupService implements Listener {
         // --- 1. Charge Economy Fee ---
         if (economyHook.isEnabled() && fee > 0 && !PortstonePermissions.canBypass(player, "fee")) {
             if (!economyHook.chargeFee(player, fee)) {
-                player.sendMessage(Component.text("You can't afford the " + economyHook.format(fee) + " travel fee!", NamedTextColor.RED));
+                plugin.getMessageService().sendMessage(player, "error-cant-afford", Map.of("fee", economyHook.format(fee)));
                 return; // Stop the teleport
             }
+            // TODO: Configurable message
             player.sendMessage(Component.text("You paid a travel fee of " + economyHook.format(fee) + ".", NamedTextColor.GRAY));
 
             // --- 2. Deposit Fee into Town Bank (if applicable) ---
@@ -117,6 +118,7 @@ public class WarmupService implements Listener {
 
         // Check if another plugin or listener cancelled the event
         if (event.isCancelled()) {
+            // TODO: Configurable message
             player.sendMessage(Component.text("Teleportation was cancelled by another process.", NamedTextColor.RED));
             return;
         }
@@ -130,7 +132,7 @@ public class WarmupService implements Listener {
 
         // Teleport the player to the calculated safe spot
         player.teleportAsync(arrivalLocation).thenRun(() ->
-            player.sendMessage(Component.text("Teleported to " + destination.getDisplayName(), NamedTextColor.GREEN)));
+            plugin.getMessageService().sendMessage(player, "teleport-success", Map.of("destination_name", destination.getDisplayName())));
 
         // --- 4. Apply Cooldown ---
         cooldownService.applyCooldown(player, destination.getType());
@@ -167,37 +169,41 @@ public class WarmupService implements Listener {
     public void requestTeleport(Player player, Portstone source, Portstone destination) {
         // --- Perform all validation checks ---
         if (source.getId().equals(destination.getId())) {
+            // TODO: Configurable message
             player.sendMessage(Component.text("You are already at this portstone.", NamedTextColor.RED));
             return;
         }
 
         if (source.getType() != destination.getType()) {
+            // TODO: Configurable message
             player.sendMessage(Component.text("You can only travel between portstones of the same type.", NamedTextColor.RED));
             return;
         }
 
-        if (source.getType() == PortType.SEA && player.getWorld().hasStorm()) {
-            player.sendMessage(Component.text("The seas are too rough! You cannot use sea ports during a storm.", NamedTextColor.RED));
+        if (source.getType() == PortType.SEA && ! player.getWorld().isClearWeather()) {
+            plugin.getMessageService().sendMessage(player, "error-stormy-seas");
             return;
         }
 
         if (!destination.isEnabled() && !PortstonePermissions.canBypass(player, "disabled")) {
-            player.sendMessage(Component.text("That portstone is currently disabled.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(player, "error-portstone-disabled");
             return;
         }
 
         if (!PortstonePermissions.canBypass(player, "cooldown") && cooldownService.isOnCooldown(player, destination.getType())) {
             long remaining = cooldownService.getRemainingSeconds(player, destination.getType());
-            player.sendMessage(Component.text("You are on cooldown for this port type. Time remaining: " + remaining + "s", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(player, "error-on-cooldown", Map.of("time", String.valueOf(remaining)));
             return;
         }
 
         if (configService.isWorldDisabled(source.getWorld()) || configService.isWorldDisabled(destination.getWorld())) {
+            // TODO: Configurable message
             player.sendMessage(Component.text("Portstones are disabled in one of these worlds.", NamedTextColor.RED));
             return;
         }
 
         if (!configService.isCrossWorldTravelAllowed() && !source.getWorld().equals(destination.getWorld())) {
+            // TODO: Configurable message
             player.sendMessage(Component.text("Cross-world travel is not enabled.", NamedTextColor.RED));
             return;
         }
@@ -218,6 +224,7 @@ public class WarmupService implements Listener {
         }
 
         if (activeWarmups.containsKey(event.getPlayer().getUniqueId())) {
+            // TODO: Configurable message
             cancelWarmup(event.getPlayer(), "Teleport cancelled. You moved.", true);
         }
     }

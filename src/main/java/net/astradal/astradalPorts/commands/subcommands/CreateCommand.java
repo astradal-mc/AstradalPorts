@@ -34,14 +34,14 @@ public final class CreateCommand {
     private static int execute(CommandContext<CommandSourceStack> ctx, AstradalPorts plugin) {
         CommandSender sender = ctx.getSource().getSender();
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Component.text("This command can only be run by a player.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-player-only");
             return 0;
         }
 
         // --- 1. Parse Arguments ---
         Optional<PortType> typeOpt = PortType.fromString(ctx.getArgument("type", String.class));
         if (typeOpt.isEmpty()) {
-            player.sendMessage(Component.text("Invalid portstone type. Use AIR, LAND, or SEA.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-invalid-type");
             return 0;
         }
 

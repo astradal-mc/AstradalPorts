@@ -38,6 +38,7 @@ public class PortstoneInteractionListener implements Listener {
             Player player = event.getPlayer();
             event.setCancelled(true); // Prevent default lodestone behavior
 
+            // TODO: Configurable message
             // Check for the 'use' permission before opening the GUI.
             if (!player.hasPermission("astradal.portstone.use")) {
                 player.sendMessage(Component.text("You do not have permission to use portstones.", NamedTextColor.RED));

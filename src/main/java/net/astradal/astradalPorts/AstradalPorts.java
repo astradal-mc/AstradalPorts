@@ -24,12 +24,15 @@ import java.io.File;
 @SuppressWarnings("unused")
 public class AstradalPorts extends JavaPlugin {
 
-    // Services & Hooks
+    // Services
     private ConfigService configService;
     private GUIService guiService;
     private CooldownService cooldownService;
     private HologramService hologramService;
     private WarmupService warmupService;
+    private MessageService messageService;
+
+    // Hooks
     private TownyHook townyHook;
     private EconomyHook economyHook;
 
@@ -76,6 +79,7 @@ public class AstradalPorts extends JavaPlugin {
         this.guiService = new GUIService(this, economyHook);
         this.hologramService = new HologramService(this.getLogger(), this.hologramRepository);
         this.warmupService = new WarmupService(this, this.configService, this.cooldownService, this.economyHook, this.townyHook);
+        this.messageService = new MessageService(this.configService);
 
         // --- 7. Load Data and Initialize Runtime Components ---
         this.portstoneManager.loadAllPortstones();
@@ -192,7 +196,9 @@ public class AstradalPorts extends JavaPlugin {
         return townyHook;
     }
 
-    // These methods are primarily for testing purposes
+    public MessageService getMessageService() { return this.messageService; }
+
+    // These methods are for testing purposes
     public void setTownyHook(TownyHook townyHook) { this.townyHook = townyHook; }
 
     public void setPortstoneManager(PortstoneManager portstoneManager) { this.portstoneManager = portstoneManager; }

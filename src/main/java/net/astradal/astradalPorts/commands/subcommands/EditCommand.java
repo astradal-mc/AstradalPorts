@@ -19,9 +19,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Registry;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -47,8 +49,9 @@ public final class EditCommand {
     }
 
     private static int execute(CommandContext<CommandSourceStack> ctx, AstradalPorts plugin) {
+        CommandSender sender = ctx.getSource().getSender();
         if (!(ctx.getSource().getSender() instanceof Player player)) {
-            ctx.getSource().getSender().sendMessage(Component.text("This command can only be run by a player.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-player-only");
             return 0;
         }
 
@@ -57,13 +60,13 @@ public final class EditCommand {
         // 1. Get the target Portstone
         Portstone portstone = manager.getPortstoneAt(player.getTargetBlock(null, 5).getLocation());
         if (portstone == null) {
-            player.sendMessage(Component.text("You are not looking at a portstone.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-not-in-view");
             return 0;
         }
 
         // 2. Check for edit permissions
         if (!plugin.getTownyHook().canEdit(player, portstone)) {
-            player.sendMessage(Component.text("You do not have permission to edit this portstone.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-not-mayor");
             return 0;
         }
 
@@ -71,7 +74,7 @@ public final class EditCommand {
         String propertyArg = ctx.getArgument("property", String.class);
         Optional<PortstoneProperty> propertyOpt = PortstoneProperty.fromString(propertyArg);
         if (propertyOpt.isEmpty()) {
-            player.sendMessage(Component.text("Unknown property '" + propertyArg + "'.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-invalid-property", Map.of("property", propertyArg));
             return 0;
         }
 
@@ -82,7 +85,7 @@ public final class EditCommand {
         switch (property) {
             case NAME -> {
                 if (manager.isDisplayNameTaken(value, portstone.getId())) {
-                    player.sendMessage(Component.text("That display name is already in use by another portstone.", NamedTextColor.RED));
+                    plugin.getMessageService().sendMessage(sender, "error-command-already-taken");
                     return 0;
                 }
 
@@ -90,22 +93,22 @@ public final class EditCommand {
                 portstone.setDisplayName(value);
                 manager.savePortstone(portstone);
                 Bukkit.getPluginManager().callEvent(new PortstonePropertyChangeEvent(portstone, property, oldName, value));
-                player.sendMessage(Component.text("Portstone name updated.", NamedTextColor.GREEN));
+                plugin.getMessageService().sendMessage(sender, "success-command-name-edited");
             }
             case FEE -> {
                 double oldFee = portstone.getTravelFee();
                 try {
                     double newFee = Double.parseDouble(value);
                     if (newFee < 0) {
-                        player.sendMessage(Component.text("Fee cannot be negative.", NamedTextColor.RED));
+                        plugin.getMessageService().sendMessage(player, "error-command-invalid-value");
                         return 0;
                     }
                     portstone.setTravelFee(newFee);
                     manager.savePortstone(portstone);
                     Bukkit.getPluginManager().callEvent(new PortstonePropertyChangeEvent(portstone, property, oldFee, newFee));
-                    player.sendMessage(Component.text("Portstone fee updated.", NamedTextColor.GREEN));
+                    plugin.getMessageService().sendMessage(sender, "success-command-fee-edited");
                 } catch (NumberFormatException e) {
-                    player.sendMessage(Component.text("'" + value + "' is not a valid number.", NamedTextColor.RED));
+                    plugin.getMessageService().sendMessage(sender, "error-command-invalid-value", Map.of("value", value));
                     return 0;
                 }
             }
@@ -113,13 +116,13 @@ public final class EditCommand {
                 Material oldIcon = portstone.getIcon();
                 Material newIcon = Material.matchMaterial(value.toUpperCase());
                 if (newIcon == null || !newIcon.isItem()) {
-                    player.sendMessage(Component.text("'" + value + "' is not a valid item.", NamedTextColor.RED));
+                    plugin.getMessageService().sendMessage(sender, "error-command-invalid-item", Map.of("value", value));
                     return 0;
                 }
                 portstone.setIcon(newIcon);
                 manager.savePortstone(portstone);
                 Bukkit.getPluginManager().callEvent(new PortstonePropertyChangeEvent(portstone, property, oldIcon, newIcon));
-                player.sendMessage(Component.text("Portstone icon updated.", NamedTextColor.GREEN));
+                plugin.getMessageService().sendMessage(sender, "success-command-icon-edited");
             }
             case ENABLED -> {
                 boolean oldStatus = portstone.isEnabled();
@@ -127,7 +130,7 @@ public final class EditCommand {
                 portstone.setEnabled(newStatus);
                 manager.savePortstone(portstone);
                 Bukkit.getPluginManager().callEvent(new PortstonePropertyChangeEvent(portstone, property, oldStatus, newStatus));
-                player.sendMessage(Component.text("Portstone status updated.", NamedTextColor.GREEN));
+                plugin.getMessageService().sendMessage(sender, "success-command-status-edited");
             }
         }
 

@@ -4,7 +4,6 @@ import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.command.TownCommand;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Resident;
-import com.palmergames.bukkit.towny.object.Town;
 import net.astradal.astradalPorts.AstradalPorts;
 import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.utils.PortstoneGUIHolder;
@@ -56,6 +55,7 @@ public class GUIListener implements Listener {
                         player.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
                     }
                 } else {
+                    // TODO: Configurable message
                     player.sendMessage(Component.text("You are not in a town or your town has no spawn set.", NamedTextColor.RED));
                 }
             }

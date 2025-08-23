@@ -10,10 +10,8 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PortstoneGUIHolder implements InventoryHolder {
     // Add the source portstone here for context, if needed
-    private final Portstone sourcePortstone;
 
-    public PortstoneGUIHolder(Portstone sourcePortstone) {
-        this.sourcePortstone = sourcePortstone;
+    public PortstoneGUIHolder() {
     }
 
     @Override

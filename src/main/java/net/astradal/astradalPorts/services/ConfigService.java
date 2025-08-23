@@ -1,6 +1,7 @@
 package net.astradal.astradalPorts.services;
 
 import net.astradal.astradalPorts.AstradalPorts;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
@@ -16,15 +17,14 @@ public class ConfigService {
 
     private final AstradalPorts plugin;
 
-    // Cached values by port type (all lowercase keys)
+    // --- Cached values by port type (all lowercase keys) ---
     private final Map<String, Integer> cooldowns = new HashMap<>();
     private final Map<String, Integer> warmups = new HashMap<>();
     private final Map<String, Integer> ranges = new HashMap<>();
 
-    // Cached global settings
+    // --- Cached global settings ----
     private boolean economyEnabled = true;
     private boolean economyRequireBalance = true;
-    private String guiTitleColor = "black";
 
     // --- Cached Teleport Rules ---
     private boolean allowCrossWorldTravel = false;
@@ -37,12 +37,14 @@ public class ConfigService {
     private String soundTeleportSuccess = "ENTITY_ENDERMAN_TELEPORT";
     private String soundTeleportCancel = "BLOCK_REDSTONE_TORCH_BURNOUT";
 
-    // --- NEW: Cached GUI Settings ---
+    // --- Cached GUI Settings ---
     private Material guiFillItem = Material.GRAY_STAINED_GLASS_PANE;
     private SpecialItemConfig townSpawnItemConfig;
-
     // A record is a simple, immutable data class. Perfect for this.
     public record SpecialItemConfig(boolean enabled, int slot, Material item, String name, List<String> lore) {}
+
+    // --- Cached Message Settings ---
+    private final Map<String, String> messages = new HashMap<>();
 
     public ConfigService(AstradalPorts plugin) {
         this.plugin = plugin;
@@ -84,8 +86,6 @@ public class ConfigService {
         economyRequireBalance = config.getBoolean("economy.requireBalance", true);
 
         // --- Load GUI Settings ---
-        guiTitleColor = config.getString("gui.title-color", "black");
-
         try {
             String fillItemName = config.getString("gui.fill-item", "GRAY_STAINED_GLASS_PANE").toUpperCase();
             this.guiFillItem = Material.valueOf(fillItemName);
@@ -117,6 +117,15 @@ public class ConfigService {
         this.soundWarmupStart = config.getString("effects.sounds.warmup-start", "BLOCK_BEACON_ACTIVATE");
         this.soundTeleportSuccess = config.getString("effects.sounds.teleport-success", "ENTITY_ENDERMAN_TELEPORT");
         this.soundTeleportCancel = config.getString("effects.sounds.teleport-cancel", "BLOCK_REDSTONE_TORCH_BURNOUT");
+
+        // --- Load Message Settings ---
+        messages.clear();
+        ConfigurationSection messageSection = config.getConfigurationSection("messages");
+        if (messageSection != null) {
+            for (String key : messageSection.getKeys(false)) {
+                messages.put(key, messageSection.getString(key, ""));
+            }
+        }
     }
 
     // --- Getters for Effect Settings ---
@@ -173,15 +182,6 @@ public class ConfigService {
     }
 
     /**
-     * Gets the configured GUI title color.
-     *
-     * @return color string (e.g., "black")
-     */
-    public String getGuiTitleColor() {
-        return guiTitleColor;
-    }
-
-    /**
      * Checks if teleporting between different worlds is allowed.
      * @return true if cross-world travel is enabled.
      */
@@ -210,4 +210,8 @@ public class ConfigService {
     public Material getGuiFillItem() { return guiFillItem; }
     public SpecialItemConfig getTownSpawnItemConfig() { return townSpawnItemConfig; }
 
+    // --- Getter for a single message ---
+    public String getMessage(String key, String defaultValue) {
+        return messages.getOrDefault(key, defaultValue);
+    }
 }

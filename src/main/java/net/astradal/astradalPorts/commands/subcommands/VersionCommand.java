@@ -11,6 +11,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 
+import java.util.Map;
+
 public final class VersionCommand {
 
     /**
@@ -35,13 +37,7 @@ public final class VersionCommand {
         // Get the version from the plugin's description file (paper-plugin.yml)
         String version = plugin.getPluginMeta().getVersion();
 
-        Component message = Component.text()
-            .append(Component.text("AstradalPorts ", NamedTextColor.GOLD))
-            .append(Component.text("version ", NamedTextColor.GRAY))
-            .append(Component.text(version, NamedTextColor.AQUA))
-            .build();
-
-        sender.sendMessage(message);
+        plugin.getMessageService().sendMessage(sender, "info-command-version", Map.of("version", version));
 
         return Command.SINGLE_SUCCESS;
     }

@@ -16,6 +16,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,14 +35,15 @@ public final class InfoCommand {
     }
 
     private static int executeTargeted(CommandContext<CommandSourceStack> ctx, AstradalPorts plugin) {
+        CommandSender sender = ctx.getSource().getSender();
         if (!(ctx.getSource().getSender() instanceof Player player)) {
-            ctx.getSource().getSender().sendMessage(Component.text("You must be a player to get info on a portstone by looking at it.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-player-only");
             return 0;
         }
 
         Portstone portstone = plugin.getPortstoneManager().getPortstoneAt(player.getTargetBlock(null, 5).getLocation());
         if (portstone == null) {
-            player.sendMessage(Component.text("You are not looking at a portstone.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-not-in-view");
             return 0;
         }
 
@@ -66,9 +68,7 @@ public final class InfoCommand {
         }
 
         if (portstoneOpt.isEmpty()) {
-            sender.sendMessage(Component.text("No portstone found with the identifier: '", NamedTextColor.RED)
-                .append(Component.text(identifier, NamedTextColor.WHITE))
-                .append(Component.text("'", NamedTextColor.RED)));
+            plugin.getMessageService().sendMessage(sender, "error-command-invalid-identifier", Map.of("identifier", identifier));
             return 0;
         }
 

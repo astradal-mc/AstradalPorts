@@ -26,6 +26,7 @@ public final class RemoveAllCommand {
             );
     }
 
+    // TODO: Add configurable messages for these
     @SuppressWarnings("SameReturnValue")
     private static int sendConfirmation(CommandContext<CommandSourceStack> ctx) {
         CommandSender sender = ctx.getSource().getSender();

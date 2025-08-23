@@ -14,6 +14,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
 import java.util.UUID;
 
 public final class RemoveCommand {
@@ -31,14 +32,15 @@ public final class RemoveCommand {
     }
 
     private static int executeTargeted(CommandContext<CommandSourceStack> ctx, AstradalPorts plugin) {
+        CommandSender sender = ctx.getSource().getSender();
         if (!(ctx.getSource().getSender() instanceof Player player)) {
-            ctx.getSource().getSender().sendMessage(Component.text("You must be a player to remove a portstone by looking at it.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-player-only");
             return 0;
         }
 
         try {
             plugin.getPortstoneManager().removePortstone(player);
-            player.sendMessage(Component.text("Portstone removed successfully!", NamedTextColor.GREEN));
+            plugin.getMessageService().sendMessage(sender, "success-command-removed");
         } catch (PortstoneManager.PortstoneRemovalException e) {
             player.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
         }
@@ -54,13 +56,13 @@ public final class RemoveCommand {
         try {
             portstoneId = UUID.fromString(idStr);
         } catch (IllegalArgumentException e) {
-            sender.sendMessage(Component.text("That is not a valid UUID format.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-invalid-id");
             return 0;
         }
 
         try {
             plugin.getPortstoneManager().removePortstone(portstoneId);
-            sender.sendMessage(Component.text("Portstone " + idStr + " removed successfully!", NamedTextColor.GREEN));
+            plugin.getMessageService().sendMessage(sender, "success-command-removed-id", Map.of("id", idStr));
         } catch (PortstoneManager.PortstoneRemovalException e) {
             sender.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
         }

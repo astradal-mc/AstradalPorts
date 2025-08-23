@@ -43,6 +43,8 @@ public class BlockBreakListener implements Listener {
 
         Player player = event.getPlayer();
 
+        //TODO: Add configurable messages for these
+
         // 3. Verify the player has permission to break this specific portstone
         if (!townyHook.canEdit(player, portstone)) {
             player.sendMessage(Component.text("You do not have permission to break this portstone.", NamedTextColor.RED));

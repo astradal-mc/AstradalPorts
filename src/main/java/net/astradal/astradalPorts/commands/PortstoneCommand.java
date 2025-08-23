@@ -25,10 +25,10 @@ public final class PortstoneCommand {
         CommandDispatcher<CommandSourceStack> dispatcher
     ) {
         var rootNode = Commands.literal("portstone")
-            .executes(ctx -> HelpCommand.execute(ctx, dispatcher)); // Default action
+            .executes(ctx -> HelpCommand.execute(ctx, dispatcher, plugin)); // Default action
 
         // Register all subcommands
-        rootNode.then(HelpCommand.build(dispatcher));
+        rootNode.then(HelpCommand.build(dispatcher, plugin));
         rootNode.then(CreateCommand.build(plugin));
         rootNode.then(EditCommand.build(plugin));
         rootNode.then(RemoveCommand.build(plugin));

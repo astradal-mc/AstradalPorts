@@ -50,7 +50,7 @@ public class ConfigMigrationUtilTest {
         oldConfig.set("messages.teleport-success", "<gold>Woosh!</gold>");
         oldConfig.save(configFile);
 
-        // ADDED: Force the plugin to load our new file from the mock disk
+        //Force the plugin to load our new file from the mock disk
         plugin.reloadConfig();
 
         // Act: Run the migration on the "old" config
@@ -70,13 +70,13 @@ public class ConfigMigrationUtilTest {
         // Arrange
         String jarVersion = plugin.getPluginMeta().getVersion();
         String oldVersion = "old-version";
-        assertNotEquals(jarVersion, oldVersion);
+        assertNotEquals(oldVersion, jarVersion);
 
         YamlConfiguration config = new YamlConfiguration();
         config.set("plugin-version", oldVersion);
         config.save(configFile);
 
-        // ADDED: Force the plugin to load our new file from the mock disk
+        // Force the plugin to load our new file from the mock disk
         plugin.reloadConfig();
 
         // Act

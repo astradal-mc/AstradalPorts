@@ -16,8 +16,10 @@ import net.astradal.astradalPorts.services.ConfigService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,8 +35,9 @@ public final class TeleportCommand {
     }
 
     private static int execute(CommandContext<CommandSourceStack> ctx, AstradalPorts plugin) {
+        CommandSender sender = ctx.getSource().getSender();
         if (!(ctx.getSource().getSender() instanceof Player player)) {
-            ctx.getSource().getSender().sendMessage(Component.text("This command can only be run by a player.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-player-only");
             return 0;
         }
 
@@ -45,7 +48,7 @@ public final class TeleportCommand {
         Optional<Portstone> destinationOpt = manager.findPortstoneByIdentifier(destinationIdentifier);
 
         if (destinationOpt.isEmpty()) {
-            player.sendMessage(Component.text("No portstone named '" + destinationIdentifier + "' was found.", NamedTextColor.RED));
+            plugin.getMessageService().sendMessage(sender, "error-command-not-found", Map.of("destination", destinationIdentifier));
             return 0;
         }
         Portstone destination = destinationOpt.get();
@@ -58,7 +61,7 @@ public final class TeleportCommand {
 
         // 3. Teleport the player directly, bypassing all services.
         player.teleportAsync(arrivalLocation).thenRun(() ->
-            player.sendMessage(Component.text("Teleported to " + destination.getDisplayName(), NamedTextColor.GREEN)));
+            plugin.getMessageService().sendMessage(player, "teleport-success", Map.of("destination_name", destinationIdentifier)));
 
         return Command.SINGLE_SUCCESS;
     }
@@ -89,7 +92,7 @@ public final class TeleportCommand {
             // If near a source, suggest all portstones except the source itself
             Portstone source = sourceOpt.get();
             manager.getAllPortstones().stream()
-                .filter(dest -> !dest.getId().equals(source.getId()))
+                .filter(destination -> !destination.getId().equals(source.getId()))
                 .map(Portstone::getDisplayName)
                 .filter(name -> name.toLowerCase().startsWith(builder.getRemaining().toLowerCase()))
                 .forEach(builder::suggest);

@@ -81,6 +81,7 @@ public final class PortstoneFormatter {
             .build();
     }
 
+    // TODO: Configurable lore lines
     /**
      * Creates a detailed lore for a portstone icon in the GUI.
      *
