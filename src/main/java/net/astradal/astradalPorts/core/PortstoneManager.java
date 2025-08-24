@@ -22,13 +22,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PortstoneManager {
 
     private final PortstoneRepository portstoneRepository;
-    private final TownyHook townyHook;
+    private TownyHook townyHook;
 
     // Caches for fast lookups. One for UUIDs, one for Locations.
     private final Map<UUID, Portstone> portstoneCacheById = new ConcurrentHashMap<>();
     private final Map<Location, Portstone> portstoneCacheByLocation = new ConcurrentHashMap<>();
 
-    public PortstoneManager(PortstoneRepository portstoneRepository, TownyHook townyHook) {
+    public PortstoneManager(PortstoneRepository portstoneRepository, @Nullable TownyHook townyHook) {
         this.portstoneRepository = portstoneRepository;
         this.townyHook = townyHook;
     }
@@ -327,5 +327,9 @@ public class PortstoneManager {
             return nationName + " " + typeName + " Port";
         }
         return townName + " " + typeName + " Port";
+    }
+
+    public void setTownyHook(TownyHook townyHook) {
+        this.townyHook = townyHook;
     }
 }

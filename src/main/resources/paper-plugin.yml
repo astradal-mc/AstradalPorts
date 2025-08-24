@@ -15,6 +15,9 @@ dependencies:
     Vault:
       load: BEFORE
       required: false
+    BlueMap:
+      load: BEFORE
+      required: false
 
 permissions:
   astradal.portstone.use:

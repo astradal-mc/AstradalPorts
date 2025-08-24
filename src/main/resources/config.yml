@@ -51,6 +51,16 @@ effects:
     teleport-success: 'ENTITY_ENDERMAN_TELEPORT'
     teleport-cancel: 'BLOCK_REDSTONE_TORCH_BURNOUT'
 
+# --- BlueMap Integration Settings ---
+bluemap-integration:
+  icons:
+    # URL to a 32x32 png icon for Land ports
+    land: "icons/land-icon.png"
+    # URL to a 32x32 png icon for Sea ports
+    sea: "icons/sea-icon.png"
+    # URL to a 32x32 png icon for Air ports
+    air: "icons/air-icon.png"
+
 # --- Message Settings ---
 messages:
   gui-title: '<black> Teleport from: <white>{source_name}</white></black>'

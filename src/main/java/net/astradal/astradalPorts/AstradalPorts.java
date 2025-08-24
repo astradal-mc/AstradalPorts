@@ -13,6 +13,7 @@ import net.astradal.astradalPorts.database.repositories.HologramRepository;
 import net.astradal.astradalPorts.database.repositories.PortstoneRepository;
 import net.astradal.astradalPorts.listeners.*;
 import net.astradal.astradalPorts.services.*;
+import net.astradal.astradalPorts.services.hooks.BlueMapHook;
 import net.astradal.astradalPorts.services.hooks.EconomyHook;
 import net.astradal.astradalPorts.services.hooks.TownyHook;
 import net.astradal.astradalPorts.utils.ConfigMigrationUtil;
@@ -35,6 +36,7 @@ public class AstradalPorts extends JavaPlugin {
     // Hooks
     private TownyHook townyHook;
     private EconomyHook economyHook;
+    private BlueMapHook blueMapHook;
 
     // Database Components
     private DatabaseManager databaseManager;
@@ -67,11 +69,12 @@ public class AstradalPorts extends JavaPlugin {
         this.cooldownRepository = new CooldownRepository(this.getLogger(), this.databaseManager);
         this.hologramRepository = new HologramRepository(this.getLogger(), this.databaseManager);
 
-        // --- 4. Setup Hooks ---
-        setupHooks();
 
-        // --- 5. Initialize Managers ---
-        this.portstoneManager = new PortstoneManager(this.portstoneRepository, this.townyHook);
+        // --- 4. Initialize Manager ---
+        this.portstoneManager = new PortstoneManager(this.portstoneRepository, null);
+
+        // --- 5. Setup Hooks ---
+        setupHooks();
 
         // --- 6. Initialize Services ---
         this.cooldownService = new CooldownService(this.cooldownRepository, this.configService);
@@ -87,6 +90,7 @@ public class AstradalPorts extends JavaPlugin {
         // --- 8. Register Commands & Listeners ---
         registerCommands();
         registerListeners();
+
 
         getLogger().info("AstradalPorts has been enabled successfully.");
     }
@@ -111,6 +115,14 @@ public class AstradalPorts extends JavaPlugin {
 
         this.townyHook = new TownyHook(this.getLogger(), this.economyHook);
         this.townyHook.initialize();
+
+        // Now that the real TownyHook exists, inject it into the manager.
+        this.portstoneManager.setTownyHook(this.townyHook);
+
+        if (getServer().getPluginManager().getPlugin("BlueMap") != null) {
+            this.blueMapHook = new BlueMapHook(this.getLogger(), this.portstoneManager, this.configService);
+            this.blueMapHook.initialize();
+        }
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -145,9 +157,9 @@ public class AstradalPorts extends JavaPlugin {
         pm.registerEvents(this.warmupService, this);
         pm.registerEvents(new BlockBreakListener(this.portstoneManager, this.townyHook), this);
 
-        if (this.townyHook.isEnabled()) {
-            pm.registerEvents(new TownyListener(this.portstoneManager, this), this);
-        }
+        if (this.blueMapHook != null) pm.registerEvents(this.blueMapHook, this);
+        if (this.townyHook.isEnabled()) pm.registerEvents(new TownyListener(this.portstoneManager, this), this);
+
     }
 
     // --- Public Getters for other classes to use ---
@@ -205,4 +217,3 @@ public class AstradalPorts extends JavaPlugin {
 
     public void setEconomyHook(EconomyHook economyHook) { this.economyHook = economyHook; }
 }
-

@@ -39,7 +39,7 @@ dependencies {
     testRuntimeOnly('org.junit.platform:junit-platform-launcher')
 
     testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
-
+    testImplementation('de.bluecolored:bluemap-api:2.7.5')
     testImplementation("org.xerial:sqlite-jdbc:3.50.3.0")
     testImplementation 'org.slf4j:slf4j-simple:2.0.7'
     testImplementation('com.github.TownyAdvanced:Towny:0.101.2.1')
