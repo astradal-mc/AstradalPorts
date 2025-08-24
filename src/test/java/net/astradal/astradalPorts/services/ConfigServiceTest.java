@@ -19,6 +19,7 @@ public class ConfigServiceTest {
     private AstradalPorts plugin;
     private ConfigService configService;
 
+    @SuppressWarnings("unused")
     @BeforeEach
     void setUp() {
         // 1. Mock the Bukkit server

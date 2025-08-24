@@ -28,7 +28,7 @@ public class GUIListener implements Listener {
     }
 
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) throws TownyException {
+    public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getInventory().getHolder() instanceof PortstoneGUIHolder)) return;
         event.setCancelled(true);
 
