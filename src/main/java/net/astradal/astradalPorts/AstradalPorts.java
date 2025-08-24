@@ -113,6 +113,7 @@ public class AstradalPorts extends JavaPlugin {
         this.townyHook.initialize();
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     private void registerCommands() {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             final var registrar = event.registrar();
