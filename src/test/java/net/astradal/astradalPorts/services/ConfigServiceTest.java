@@ -52,7 +52,7 @@ public class ConfigServiceTest {
 
     @Test
     void getGuiTitleColor_shouldReturnCorrectValueFromConfigFile() {
-        assertEquals("black", configService.getGuiTitleColor());
+        assertEquals("GRAY_STAINED_GLASS_PANE", configService.getGuiFillItem().toString());
     }
 
     @Test
@@ -76,6 +76,6 @@ public class ConfigServiceTest {
         assertEquals(-1, configService.getRange("any_type"));
         assertTrue(configService.isEconomyEnabled());
         assertTrue(configService.isEconomyRequireBalance());
-        assertEquals("black", configService.getGuiTitleColor());
+        assertEquals("GRAY_STAINED_GLASS_PANE", configService.getGuiFillItem().toString());
     }
 }
