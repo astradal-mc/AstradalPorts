@@ -19,6 +19,7 @@ repositories {
     maven {
         url = 'https://jitpack.io'
     }
+    maven { url 'https://repo.bluecolored.de/releases' }
 }
 
 dependencies {
@@ -27,6 +28,7 @@ dependencies {
     compileOnly 'com.github.TownyAdvanced:Towny:0.101.2.1'
     compileOnly "com.github.MilkBowl:VaultAPI:1.7.1"
     compileOnly("org.xerial:sqlite-jdbc:3.50.3.0")
+    compileOnly 'de.bluecolored:bluemap-api:2.7.5'
 
     //tests
 
