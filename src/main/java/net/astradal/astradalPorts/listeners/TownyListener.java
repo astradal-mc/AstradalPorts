@@ -10,7 +10,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Listens for events from the Towny API to keep Portstone data synchronized.

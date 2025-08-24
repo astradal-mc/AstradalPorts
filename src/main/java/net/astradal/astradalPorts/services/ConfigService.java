@@ -1,7 +1,6 @@
 package net.astradal.astradalPorts.services;
 
 import net.astradal.astradalPorts.AstradalPorts;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;

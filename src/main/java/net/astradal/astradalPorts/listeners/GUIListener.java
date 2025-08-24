@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class GUIListener implements Listener {
@@ -45,7 +46,7 @@ public class GUIListener implements Listener {
             if (specialAction.equals("town_spawn")) {
                 // Use the Towny API to send the player to their town's spawn
                 Resident resident = TownyAPI.getInstance().getResident(player);
-                if (resident != null && resident.hasTown() && resident.getTownOrNull().hasSpawn()) {
+                if (resident != null && resident.hasTown() && Objects.requireNonNull(resident.getTownOrNull()).hasSpawn()) {
                     try {
                         // This respects all of Towny's internal cooldowns, costs, and warmups.
                         TownCommand.townSpawn(player, new String[0], false, true);

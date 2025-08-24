@@ -176,12 +176,9 @@ public class TownyHook {
         }
 
         // Not hostile if they are in the same nation or their nations are allied.
-        if (sourceNation.equals(destNation) || sourceNation.hasAlly(destNation)) {
-            return false;
-        }
+        return ! sourceNation.equals(destNation) && !sourceNation.hasAlly(destNation);
 
         // If they are in different, non-allied nations, they are considered hostile.
-        return true;
     }
 
     public void depositToTownBank(String townName, double amount) {

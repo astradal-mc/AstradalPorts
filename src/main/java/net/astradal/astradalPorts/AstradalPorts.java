@@ -57,7 +57,6 @@ public class AstradalPorts extends JavaPlugin {
         this.configService = new ConfigService(this);
 
         // --- 2. Database Setup ---
-        if (!getDataFolder().exists()) getDataFolder().mkdirs();
         String dbUrl = "jdbc:sqlite:" + new File(getDataFolder(), "database.db").getAbsolutePath();
         this.databaseManager = new DatabaseManager(dbUrl, getLogger());
         this.databaseManager.connect();

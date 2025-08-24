@@ -74,6 +74,7 @@ public class WarmupTask implements Runnable {
     public Player getPlayer() { return player; }
     public Portstone getDestination() { return destination; }
     public int getTaskId() { return taskId; }
+    @SuppressWarnings("unused")
     public Location getStartLocation() { return startLocation; }
 
     public Portstone getSource() {

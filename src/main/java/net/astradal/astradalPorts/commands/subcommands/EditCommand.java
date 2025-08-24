@@ -14,8 +14,6 @@ import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.core.PortstoneManager;
 import net.astradal.astradalPorts.core.PortstoneProperty;
 import net.astradal.astradalPorts.events.PortstonePropertyChangeEvent;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Registry;

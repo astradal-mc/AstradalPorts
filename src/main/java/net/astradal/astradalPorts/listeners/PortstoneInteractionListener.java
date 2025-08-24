@@ -1,7 +1,5 @@
 package net.astradal.astradalPorts.listeners;
 
-import net.astradal.astradalPorts.AstradalPorts;
-import net.astradal.astradalPorts.commands.PortstonePermissions;
 import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.core.PortstoneManager;
 import net.astradal.astradalPorts.services.GUIService;

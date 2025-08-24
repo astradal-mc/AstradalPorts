@@ -1,6 +1,5 @@
 package net.astradal.astradalPorts.utils;
 
-import net.astradal.astradalPorts.core.Portstone;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;

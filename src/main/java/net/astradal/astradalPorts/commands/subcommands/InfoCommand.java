@@ -11,8 +11,6 @@ import net.astradal.astradalPorts.commands.PortstonePermissions;
 import net.astradal.astradalPorts.core.Portstone;
 import net.astradal.astradalPorts.core.PortstoneManager;
 import net.astradal.astradalPorts.utils.PortstoneFormatter;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
