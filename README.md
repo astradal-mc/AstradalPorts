@@ -19,25 +19,25 @@ An immersive, lore-friendly fast travel plugin for PaperMC servers using the Tow
 
 All commands are rooted under `/portstone` (alias: `/ps`).
 
-| Command                                      | Description                                                                                              |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `/ps help`                                   | Displays the help menu with all available commands.                                                      |
-| `/ps create <type> [name]`                   | Creates a new portstone of the specified type at the lodestone you are looking at.                       |
-| `/ps remove`                                 | Removes the portstone you are looking at.                                                                |
-| `/ps remove <uuid>`                          | (Admin) Removes a portstone by its UUID.                                                                 |
-| `/ps removeall confirm`                      | (Admin) Removes ALL portstones from the server after a confirmation prompt.                              |
-| `/ps edit <property> <value>`                | Edits a property of the portstone you are looking at. Properties: `name`, `fee`, `icon`, `enabled`.       |
-| `/ps info`                                   | Displays detailed information about the portstone you are looking at.                                    |
-| `/ps info <uuid/name>`                       | Displays detailed information about a portstone by its UUID or display name.                             |
-| `/ps list [filters...]`                      | Lists all portstones. Can be filtered with key-value pairs (e.g., `type:land owner:Astra status:enabled`). |
-| `/ps teleport <name>`                        | Initiates a teleport from a nearby portstone to the destination with the specified name.                 |
-| `/ps reload`                                 | (Admin) Reloads the plugin's configuration files.                                                        |
-| `/ps version`                                | Displays the current plugin version.                                                                     |
+| Command                       | Description                                                                                                |
+|-------------------------------|------------------------------------------------------------------------------------------------------------|
+| `/ps help`                    | Displays the help menu with all available commands.                                                        |
+| `/ps create <type> [name]`    | Creates a new portstone of the specified type at the lodestone you are looking at.                         |
+| `/ps remove`                  | Removes the portstone you are looking at.                                                                  |
+| `/ps remove <uuid>`           | (Admin) Removes a portstone by its UUID.                                                                   |
+| `/ps removeall confirm`       | (Admin) Removes ALL portstones from the server after a confirmation prompt.                                |
+| `/ps edit <property> <value>` | Edits a property of the portstone you are looking at. Properties: `name`, `fee`, `icon`, `enabled`.        |
+| `/ps info`                    | Displays detailed information about the portstone you are looking at.                                      |
+| `/ps info <uuid/name>`        | Displays detailed information about a portstone by its UUID or display name.                               |
+| `/ps list [filters...]`       | Lists all portstones. Can be filtered with key-value pairs (e.g., `type:land owner:Astra status:enabled`). |
+| `/ps teleport <name>`         | Initiates a teleport from a nearby portstone to the destination with the specified name.                   |
+| `/ps reload`                  | (Admin) Reloads the plugin's configuration files.                                                          |
+| `/ps version`                 | Displays the current plugin version.                                                                       |
 
 ## Permissions
 
 | Permission Node                        | Description                                      | Default |
-| -------------------------------------- | ------------------------------------------------ | ------- |
+|----------------------------------------|--------------------------------------------------|---------|
 | `astradal.portstone.use`               | Allows a player to open the travel GUI on click. | `true`  |
 | `astradal.portstone.command.create`    | Allows creating new portstones.                  | OP      |
 | `astradal.portstone.command.remove`    | Allows using the `/ps remove` command.           | OP      |
@@ -90,7 +90,6 @@ economy:
 
 # --- GUI Settings ---
 gui:
-  title-color: "black"
   fill-item: 'GRAY_STAINED_GLASS_PANE'
   special-items:
     town-spawn:
@@ -114,14 +113,61 @@ effects:
 
 # --- Message Settings ---
 messages:
+  gui-title: '<black> Teleport from: <white>{source_name}</white></black>'
+
   teleport-success: '<green>Teleported to <aqua>{destination_name}</aqua>!</green>'
   teleport-warmup: '<yellow>Teleporting in {seconds} seconds. Don''t move!</yellow>'
   teleport-cancelled-move: '<red>Teleport cancelled. You moved.</red>'
+
   error-on-cooldown: '<red>You are on cooldown for this port type. Time remaining: {time}s</red>'
-  error-no-permission: '<red>You do not have permission to do that.</red>'
   error-cant-afford: '<red>You can''t afford the {fee} travel fee!</red>'
-  error-portstone-disabled: '<red>That portstone is currently disabled.</red>'
   error-stormy-seas: '<red>The seas are too rough! You cannot use sea ports during a storm.</red>'
+
+  warning-no-destinations: '<yellow>No available destinations of this type."</yellow>'
+
+  # Command feedback
+  # Generic
+  error-command-player-only: '<red>This command can only be run by a player.</red>'
+  error-command-not-in-view: '<red>You are not looking at a portstone</red>'
+  error-command-invalid-type: '<red>Invalid Portstone type. Use AIR, LAND, or SEA.</red>'
+  error-command-already-taken: '<red>That display name is already in use by another portstone.</red>'
+
+  # Help command
+  error-command-no-info: '<red>Error: Could not find command information.</red>'
+  error-command-no-description: 'No description available.'
+
+  # Edit command
+  error-command-not-mayor: '<red>You do not have permission to edit this portstone.</red>'
+  error-command-invalid-property: "<red>Unknown property '{property}'.</red>"
+  error-command-negative-value: '<red>Fee cannot be negative.</red>'
+  error-command-invalid-value: "<red>'{value}' is not a valid number.</red>"
+  error-command-invalid-item: "<red>'{value}' is not a valid item.</red>"
+  success-command-fee-edited: '<green>Portstone fee updated</green>'
+  success-command-name-edited: '<green>"Portstone name updated.</green>'
+  success-command-icon-edited: '<green>Portstone icon updated.</green>'
+  success-command-status-edited: '<green>Portstone status updated.</green>'
+
+  # Info command
+  error-command-invalid-identifier: "<red>No portstone found with identifier: '<white>{identifier}</white>'</red>"
+
+  # List command
+  warning-command-none-found: '<yellow>No portstones found matching your criteria.</yellow>'
+
+  # Reload command
+  info-command-reload-starting: '<green>Reloading AstradalPorts configuration...</green>'
+  success-command-reload-complete: '<green>Reload complete! Took {duration}ms.</green>'
+
+  # Remove command
+  success-command-removed: '<green>Portstone removed successfully!</green>'
+  success-command-removed-id: '<green>Portstone {id} removed successfully!</green>'
+  error-command-invalid-id: '<red>That is not a valid UUID format.</red>'
+
+  # Teleport command
+  error-command-not-found: "<red> No portstone named '<white>{destination}</white>' was found.</red>"
+  # Success is under teleport-success
+
+  # Version command
+  info-command-version: '<gold>AstradalPorts</gold> <gray>version</gray> <aqua>{version}</aqua>'
 ```
 
 ## Installation
