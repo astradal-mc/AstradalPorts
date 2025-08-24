@@ -18,6 +18,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -80,8 +81,29 @@ public class BlueMapHook implements Listener {
         String markerId = "portstone-" + portstone.getId().toString();
         Location loc = portstone.getLocation();
         Vector3d position = new Vector3d(loc.getX(), loc.getY(), loc.getZ());
+        String iconUrl = configService.getBlueMapIcon(portstone.getType());
 
-        // --- Build a Nicer HTML Detail Popup ---
+        // --- Build the Nicer HTML Detail Popup ---
+        String detail = getString(portstone, iconUrl);
+
+        // --- Build the Marker ---
+        POIMarker.Builder markerBuilder = POIMarker.builder()
+            .label(portstone.getDisplayName())
+            .position(position)
+            .detail(detail);
+
+        // --- Add the Custom Map Icon ---
+        // This is the part that puts the icon on the actual map.
+        if (iconUrl != null && !iconUrl.isBlank()) {
+            // The anchor centers the 32x32 icon on the location.
+            markerBuilder.icon(iconUrl, new Vector2i(16, 16)); // Anchor to bottom-center
+        }
+
+        // Finalize and add the marker to the set
+        markerSet.put(markerId, markerBuilder.build());
+    }
+
+    private static @NotNull String getString(Portstone portstone, String iconUrl) {
         String statusColor = portstone.isEnabled() ? "green" : "red";
         String statusText = portstone.isEnabled() ? "Enabled" : "Disabled";
         String owner = portstone.getTown() != null ? portstone.getTown() : "Unowned";
@@ -89,8 +111,9 @@ public class BlueMapHook implements Listener {
             owner = portstone.getNation() + " (Nation)";
         }
 
-        String detail = String.format("""
+        return String.format("""
             <div style="text-align: center; font-family: Minecraft, sans-serif;">
+              <img src="%s" style="width: 32px; height: 32px; image-rendering: pixelated;">
               <h5 style="margin: 0; color: #55FFFF;">%s Port</h5>
               <hr style="margin: 2px 0;">
               <p style="margin: 0; padding: 0;">
@@ -99,27 +122,12 @@ public class BlueMapHook implements Listener {
               </p>
             </div>
             """,
+            iconUrl != null ? iconUrl : "",
             portstone.getType().name(),
             owner,
             statusColor,
             statusText
         );
-
-        // --- Build the Marker ---
-        POIMarker.Builder markerBuilder = POIMarker.builder()
-            .label(portstone.getDisplayName())
-            .position(position)
-            .detail(detail);
-
-        // --- Add the Custom Icon ---
-        String iconUrl = configService.getBlueMapIcon(portstone.getType());
-        if (iconUrl != null && !iconUrl.isBlank()) {
-            // The anchor centers the 32x32 icon on the location
-            markerBuilder.icon(iconUrl, new Vector2i(16, 16));
-        }
-
-        // Finalize and add the marker to the set
-        markerSet.put(markerId, markerBuilder.build());
     }
 
     public void removeMarker(UUID portstoneId) {
