@@ -43,9 +43,6 @@ public class ConfigService {
     // A record is a simple, immutable data class. Perfect for this.
     public record SpecialItemConfig(boolean enabled, int slot, Material item, String name, List<String> lore) {}
 
-    // --- Cached BlueMap Settings ---
-    private final Map<PortType, String> blueMapIcons = new EnumMap<>(PortType.class);
-
     // --- Cached Message Settings ---
     private final Map<String, String> messages = new HashMap<>();
 
@@ -120,17 +117,6 @@ public class ConfigService {
         this.soundWarmupStart = config.getString("effects.sounds.warmup-start", "BLOCK_BEACON_ACTIVATE");
         this.soundTeleportSuccess = config.getString("effects.sounds.teleport-success", "ENTITY_ENDERMAN_TELEPORT");
         this.soundTeleportCancel = config.getString("effects.sounds.teleport-cancel", "BLOCK_REDSTONE_TORCH_BURNOUT");
-
-        // --- Load BlueMap Settings ---
-        blueMapIcons.clear();
-        ConfigurationSection iconSection = config.getConfigurationSection("bluemap-integration.icons");
-        if (iconSection != null) {
-            for (String key : iconSection.getKeys(false)) {
-                PortType.fromString(key).ifPresent(type -> {
-                    blueMapIcons.put(type, iconSection.getString(key));
-                });
-            }
-        }
 
         // --- Load Message Settings ---
         messages.clear();
@@ -223,11 +209,6 @@ public class ConfigService {
     // --- Getters for GUI Settings ---
     public Material getGuiFillItem() { return guiFillItem; }
     public SpecialItemConfig getTownSpawnItemConfig() { return townSpawnItemConfig; }
-
-    // --- Getter for BlueMap Icons ---
-    public String getBlueMapIcon(PortType type) {
-        return blueMapIcons.get(type);
-    }
 
     // --- Getter for a single message ---
     public String getMessage(String key, String defaultValue) {

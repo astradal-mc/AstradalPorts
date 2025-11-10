@@ -15,6 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
@@ -34,20 +35,23 @@ public class WarmupService implements Listener {
     private final CooldownService cooldownService;
     private final EconomyHook economyHook;
     private final TownyHook townyHook; // Needed to find the town bank
+    private final MessageService messageService;
+
 
     // Update the constructor to accept the new dependencies
-    public WarmupService(AstradalPorts plugin, ConfigService configService, CooldownService cooldownService, EconomyHook economyHook, TownyHook townyHook) {
+    public WarmupService(AstradalPorts plugin, ConfigService configService, CooldownService cooldownService, EconomyHook economyHook, TownyHook townyHook, MessageService messageService) {
         this.plugin = plugin;
         this.configService = configService;
         this.cooldownService = cooldownService;
         this.economyHook = economyHook;
         this.townyHook = townyHook;
+        this.messageService = messageService;
     }
 
     public void startWarmup(Player player, Portstone source, Portstone destination) {
         // Cancel any existing warmup for this player
         if (activeWarmups.containsKey(player.getUniqueId())) {
-            cancelWarmup(player, "You started a new teleport.", false);
+            cancelWarmup(player, "teleport-cancelled-new");
         }
 
         int warmupSeconds = configService.getWarmup(destination.getType().name());
@@ -82,13 +86,19 @@ public class WarmupService implements Listener {
         }
     }
 
-    public void cancelWarmup(Player player, String reason, boolean showMessage) {
+    /**
+     * Cancels a warmup task for a player and plays the cancellation sound.
+     * @param player The player whose task is being cancelled.
+     * @param messageKey The config.yml message key to send (e.g., "teleport-cancelled-move"). Can be null.
+     */
+    public void cancelWarmup(Player player, @Nullable String messageKey) {
         WarmupTask task = activeWarmups.remove(player.getUniqueId());
         if (task != null) {
             Bukkit.getScheduler().cancelTask(task.getTaskId());
             task.cancel();
-            if (showMessage) {
-                player.sendMessage(Component.text(reason, NamedTextColor.RED));
+
+            if (messageKey != null) {
+                messageService.sendMessage(player, messageKey);
             }
             playSound(player, configService.getSoundTeleportCancel());
         }
@@ -103,8 +113,7 @@ public class WarmupService implements Listener {
                 plugin.getMessageService().sendMessage(player, "error-cant-afford", Map.of("fee", economyHook.format(fee)));
                 return; // Stop the teleport
             }
-            // TODO: Configurable message
-            player.sendMessage(Component.text("You paid a travel fee of " + economyHook.format(fee) + ".", NamedTextColor.GRAY));
+            messageService.sendMessage(player, "teleport-fee-paid", Map.of("fee", economyHook.format(fee)));
 
             // --- 2. Deposit Fee into Town Bank (if applicable) ---
             if (townyHook.isEnabled() && destination.getTown() != null) {
@@ -118,8 +127,7 @@ public class WarmupService implements Listener {
 
         // Check if another plugin or listener cancelled the event
         if (event.isCancelled()) {
-            // TODO: Configurable message
-            player.sendMessage(Component.text("Teleportation was cancelled by another process.", NamedTextColor.RED));
+            messageService.sendMessage(player, "teleport-cancelled-other");
             return;
         }
 
@@ -169,14 +177,12 @@ public class WarmupService implements Listener {
     public void requestTeleport(Player player, Portstone source, Portstone destination) {
         // --- Perform all validation checks ---
         if (source.getId().equals(destination.getId())) {
-            // TODO: Configurable message
-            player.sendMessage(Component.text("You are already at this portstone.", NamedTextColor.RED));
+            messageService.sendMessage(player, "error-already-at-portstone");
             return;
         }
 
         if (source.getType() != destination.getType()) {
-            // TODO: Configurable message
-            player.sendMessage(Component.text("You can only travel between portstones of the same type.", NamedTextColor.RED));
+            messageService.sendMessage(player, "error-different-type");
             return;
         }
 
@@ -197,14 +203,12 @@ public class WarmupService implements Listener {
         }
 
         if (configService.isWorldDisabled(source.getWorld()) || configService.isWorldDisabled(destination.getWorld())) {
-            // TODO: Configurable message
-            player.sendMessage(Component.text("Portstones are disabled in one of these worlds.", NamedTextColor.RED));
+            messageService.sendMessage(player, "error-world-disabled");
             return;
         }
 
         if (!configService.isCrossWorldTravelAllowed() && !source.getWorld().equals(destination.getWorld())) {
-            // TODO: Configurable message
-            player.sendMessage(Component.text("Cross-world travel is not enabled.", NamedTextColor.RED));
+            messageService.sendMessage(player, "error-cross-world-disabled");
             return;
         }
 
@@ -225,14 +229,14 @@ public class WarmupService implements Listener {
 
         if (activeWarmups.containsKey(event.getPlayer().getUniqueId())) {
             // TODO: Configurable message
-            cancelWarmup(event.getPlayer(), "Teleport cancelled. You moved.", true);
+            cancelWarmup(event.getPlayer(), "teleport-cancelled-move");
         }
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (activeWarmups.containsKey(event.getPlayer().getUniqueId())) {
-            cancelWarmup(event.getPlayer(), "", false); // No message needed, they're offline
+            cancelWarmup(event.getPlayer(), null); // No message needed, they're offline
         }
     }
 

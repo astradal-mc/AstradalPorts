@@ -34,13 +34,11 @@ public class BlueMapHook implements Listener {
     private boolean enabled = false;
     private MarkerSet markerSet;
     private static final String MARKER_SET_ID = "astradal-portstones";
-    private final ConfigService configService;
 
     // Update the constructor to take the ConfigService
-    public BlueMapHook(Logger logger, PortstoneManager portstoneManager, ConfigService configService) {
+    public BlueMapHook(Logger logger, PortstoneManager portstoneManager) {
         this.logger = logger;
         this.portstoneManager = portstoneManager;
-        this.configService = configService;
     }
 
     public void initialize() {
@@ -54,20 +52,21 @@ public class BlueMapHook implements Listener {
 
             // 1. Create our single, shared MarkerSet object.
             this.markerSet = MarkerSet.builder()
-                .label("Portstones")
+                .label("Astradal Portstones")
                 .toggleable(true)
                 .defaultHidden(false)
                 .build();
 
-            // 2. Add markers for all portstones that already exist.
-            portstoneManager.getAllPortstones().forEach(this::addOrUpdateMarker);
-
-            // 3. Add our MarkerSet to every map on every world.
+            // This makes the set "live".
             for (BlueMapWorld world : api.getWorlds()) {
                 for (BlueMapMap map : world.getMaps()) {
                     map.getMarkerSets().put(MARKER_SET_ID, this.markerSet);
                 }
             }
+
+            // 3. NOW, add markers for all portstones that already exist.
+            // Since the set is live, BlueMap will see these additions.
+            portstoneManager.getAllPortstones().forEach(this::addOrUpdateMarker);
         });
     }
 
@@ -81,50 +80,44 @@ public class BlueMapHook implements Listener {
         String markerId = "portstone-" + portstone.getId().toString();
         Location loc = portstone.getLocation();
         Vector3d position = new Vector3d(loc.getX(), loc.getY(), loc.getZ());
-        String iconUrl = configService.getBlueMapIcon(portstone.getType());
 
-        // --- Build the Nicer HTML Detail Popup ---
-        String detail = getString(portstone, iconUrl);
+        String detail = getString(portstone);
 
         // --- Build the Marker ---
-        POIMarker.Builder markerBuilder = POIMarker.builder()
+        POIMarker marker = POIMarker.builder()
             .label(portstone.getDisplayName())
             .position(position)
-            .detail(detail);
+            .detail(detail)
+            .build();
 
-        // --- Add the Custom Map Icon ---
-        // This is the part that puts the icon on the actual map.
-        if (iconUrl != null && !iconUrl.isBlank()) {
-            // The anchor centers the 32x32 icon on the location.
-            markerBuilder.icon(iconUrl, new Vector2i(16, 16)); // Anchor to bottom-center
-        }
+        // REMOVED: The .icon() block
 
-        // Finalize and add the marker to the set
-        markerSet.put(markerId, markerBuilder.build());
+        markerSet.put(markerId, marker);
     }
 
-    private static @NotNull String getString(Portstone portstone, String iconUrl) {
+    private static @NotNull String getString(Portstone portstone) {
         String statusColor = portstone.isEnabled() ? "green" : "red";
         String statusText = portstone.isEnabled() ? "Enabled" : "Disabled";
         String owner = portstone.getTown() != null ? portstone.getTown() : "Unowned";
+        double fee = portstone.getTravelFee();
         if (portstone.getType() == PortType.AIR && portstone.getNation() != null) {
             owner = portstone.getNation() + " (Nation)";
         }
 
         return String.format("""
             <div style="text-align: center; font-family: Minecraft, sans-serif;">
-              <img src="%s" style="width: 32px; height: 32px; image-rendering: pixelated;">
               <h5 style="margin: 0; color: #55FFFF;">%s Port</h5>
               <hr style="margin: 2px 0;">
               <p style="margin: 0; padding: 0;">
                 <b>Owner:</b> %s<br>
+                <b>Fee:</b> $%.2f<br>
                 <b>Status:</b> <span style="color: %s;">%s</span>
               </p>
             </div>
             """,
-            iconUrl != null ? iconUrl : "",
             portstone.getType().name(),
             owner,
+            fee,
             statusColor,
             statusText
         );

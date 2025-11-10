@@ -57,6 +57,7 @@ public class AstradalPorts extends JavaPlugin {
         ConfigMigrationUtil.updateVersionInConfig(this);
 
         this.configService = new ConfigService(this);
+        this.messageService = new MessageService(this.configService);
 
         // --- 2. Database Setup ---
         String dbUrl = "jdbc:sqlite:" + new File(getDataFolder(), "database.db").getAbsolutePath();
@@ -80,8 +81,7 @@ public class AstradalPorts extends JavaPlugin {
         this.cooldownService = new CooldownService(this.cooldownRepository, this.configService);
         this.guiService = new GUIService(this, economyHook);
         this.hologramService = new HologramService(this.getLogger(), this.hologramRepository);
-        this.warmupService = new WarmupService(this, this.configService, this.cooldownService, this.economyHook, this.townyHook);
-        this.messageService = new MessageService(this.configService);
+        this.warmupService = new WarmupService(this, this.configService, this.cooldownService, this.economyHook, this.townyHook, this.messageService);
 
         // --- 7. Load Data and Initialize Runtime Components ---
         this.portstoneManager.loadAllPortstones();
@@ -120,7 +120,7 @@ public class AstradalPorts extends JavaPlugin {
         this.portstoneManager.setTownyHook(this.townyHook);
 
         if (getServer().getPluginManager().getPlugin("BlueMap") != null) {
-            this.blueMapHook = new BlueMapHook(this.getLogger(), this.portstoneManager, this.configService);
+            this.blueMapHook = new BlueMapHook(this.getLogger(), this.portstoneManager);
             this.blueMapHook.initialize();
         }
     }
