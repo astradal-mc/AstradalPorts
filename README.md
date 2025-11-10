@@ -71,9 +71,9 @@ teleport-rules:
 # --- Portstone Type Settings ---
 portstones:
   air:
-    cooldown: 600
-    warmup: 5
-    range: -1
+    cooldown: 600 # Seconds
+    warmup: 5 # Seconds
+    range: -1 # -1 for global
   sea:
     cooldown: 1200
     warmup: 5
@@ -81,7 +81,7 @@ portstones:
   land:
     cooldown: 1200
     warmup: 5
-    range: 1000
+    range: 1000 # Blocks
 
 # --- Economy Settings ---
 economy:
@@ -113,17 +113,23 @@ effects:
 
 # --- Message Settings ---
 messages:
-  gui-title: '<black> Teleport from: <white>{source_name}</white></black>'
+  gui-title: '<black> Teleport from: <white><source_name></white></black>'
 
-  teleport-success: '<green>Teleported to <aqua>{destination_name}</aqua>!</green>'
-  teleport-warmup: '<yellow>Teleporting in {seconds} seconds. Don''t move!</yellow>'
+  teleport-success: '<green>Teleported to <aqua><destination_name></aqua>!</green>'
+  teleport-warmup: '<yellow>Teleporting in <seconds> seconds. Don''t move!</yellow>'
   teleport-cancelled-move: '<red>Teleport cancelled. You moved.</red>'
 
-  error-on-cooldown: '<red>You are on cooldown for this port type. Time remaining: {time}s</red>'
-  error-cant-afford: '<red>You can''t afford the {fee} travel fee!</red>'
+  error-on-cooldown: '<red>You are on cooldown for this port type. Time remaining: <time>s</red>'
+  error-cant-afford: '<red>You can''t afford the <fee> travel fee!</red>'
   error-stormy-seas: '<red>The seas are too rough! You cannot use sea ports during a storm.</red>'
-
-  warning-no-destinations: '<yellow>No available destinations of this type."</yellow>'
+  teleport-fee-paid: '<gray>You paid a travel fee of <fee>.</gray>'
+  teleport-cancelled-other: '<red>Teleportation was cancelled by another process.</red>'
+  teleport-cancelled-new: '<yellow>Your previous teleport attempt was cancelled.</yellow>'
+  error-already-at-portstone: '<red>You are already at this portstone.</red>'
+  error-different-type: '<red>You can only travel between portstones of the same type.</red>'
+  error-world-disabled: '<red>Portstones are disabled in one of these worlds.</red>'
+  error-cross-world-disabled: '<red>Cross-world travel is not enabled.</red>'
+  warning-no-destinations: '<yellow>No available destinations of this type.</yellow>'
 
   # Command feedback
   # Generic
@@ -138,36 +144,36 @@ messages:
 
   # Edit command
   error-command-not-mayor: '<red>You do not have permission to edit this portstone.</red>'
-  error-command-invalid-property: "<red>Unknown property '{property}'.</red>"
+  error-command-invalid-property: "<red>Unknown property '<property>'.</red>"
   error-command-negative-value: '<red>Fee cannot be negative.</red>'
-  error-command-invalid-value: "<red>'{value}' is not a valid number.</red>"
-  error-command-invalid-item: "<red>'{value}' is not a valid item.</red>"
+  error-command-invalid-value: "<red>'<value>' is not a valid number.</red>"
+  error-command-invalid-item: "<red>'<value>' is not a valid item.</red>"
   success-command-fee-edited: '<green>Portstone fee updated</green>'
   success-command-name-edited: '<green>"Portstone name updated.</green>'
   success-command-icon-edited: '<green>Portstone icon updated.</green>'
   success-command-status-edited: '<green>Portstone status updated.</green>'
 
   # Info command
-  error-command-invalid-identifier: "<red>No portstone found with identifier: '<white>{identifier}</white>'</red>"
+  error-command-invalid-identifier: "<red>No portstone found with identifier: '<white><identifier></white>'</red>"
 
   # List command
   warning-command-none-found: '<yellow>No portstones found matching your criteria.</yellow>'
 
   # Reload command
   info-command-reload-starting: '<green>Reloading AstradalPorts configuration...</green>'
-  success-command-reload-complete: '<green>Reload complete! Took {duration}ms.</green>'
+  success-command-reload-complete: '<green>Reload complete! Took <duration>ms.</green>'
 
   # Remove command
   success-command-removed: '<green>Portstone removed successfully!</green>'
-  success-command-removed-id: '<green>Portstone {id} removed successfully!</green>'
+  success-command-removed-id: '<green>Portstone <id> removed successfully!</green>'
   error-command-invalid-id: '<red>That is not a valid UUID format.</red>'
 
   # Teleport command
-  error-command-not-found: "<red> No portstone named '<white>{destination}</white>' was found.</red>"
+  error-command-not-found: "<red> No portstone named '<white><destination></white>' was found.</red>"
   # Success is under teleport-success
 
   # Version command
-  info-command-version: '<gold>AstradalPorts</gold> <gray>version</gray> <aqua>{version}</aqua>'
+  info-command-version: '<gold>AstradalPorts</gold> <gray>version</gray> <aqua><version></aqua>'
 ```
 
 ## Installation
